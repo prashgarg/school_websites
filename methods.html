@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Methods — School Websites Project</title>
+  <meta name="description" content="Methodology: how we identify, crawl, and classify 145,569 U.S. school websites to construct topic prominence scores." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js"></script>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="brand-icon">SWP</div>
+      <a href="index.html">School Websites Project</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html" class="active">Methods</a>
+      <a href="data.html">Data</a>
+      <button id="theme-toggle" title="Toggle theme">☾</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div style="padding: 3rem 0 1.5rem;">
+    <div class="section-label">Methodology</div>
+    <h1 style="font-size:2rem;font-weight:700;letter-spacing:-0.025em;margin-bottom:0.75rem">
+      How We Measure School Website Content
+    </h1>
+    <p style="font-size:1.05rem;color:var(--text-muted);max-width:660px;line-height:1.7">
+      A four-stage pipeline: school universe construction → URL discovery →
+      web crawl → topic classification. Each stage is described below.
+    </p>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── Stage 1: School Universe ─────────────────────────── -->
+  <div class="section">
+    <h2>Stage 1 — School Universe</h2>
+    <p class="section-lead">
+      We begin with administrative data from the National Center for Education
+      Statistics (NCES), combining two primary sources.
+    </p>
+
+    <div class="methods-grid">
+      <div class="method-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Private School Survey (PSS)</h4>
+          <p>The 2021–22 PSS covers 32,996 private schools in the continental
+          U.S. We retain all schools with a valid NCES ID. The PSS provides
+          school name, address, affiliation (Catholic, Non-Catholic religious,
+          Nonsectarian), grade span, enrollment, and geography.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>Common Core of Data (CCD)</h4>
+          <p>The 2021–22 CCD covers 90,000+ public schools, including charter
+          schools, magnet schools, and traditional public schools. We merge
+          with local education agency (LEA) data to obtain district-level
+          URLs as fallback seeds.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>Merged spine</h4>
+          <p>We combine PSS and CCD into a unified school spine of 145,569
+          schools, deduplicating on NCES school ID. The spine stores
+          geographic coordinates (lat/lon from PSS), state, county FIPS,
+          enrollment, and grade span.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stage 2: URL Discovery ────────────────────────────── -->
+  <div class="section">
+    <h2>Stage 2 — URL Discovery</h2>
+    <p class="section-lead">
+      Identifying the correct official website for 145,000+ schools requires
+      a multi-stage pipeline combining multiple data sources. We achieve
+      81.6% URL coverage before crawling.
+    </p>
+
+    <div class="methods-grid">
+      <div class="method-step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h4>Administrative sources</h4>
+          <p>URLs scraped directly from PSS and CCD records where reported.
+          Covers approximately 60% of public schools and 25% of private
+          schools in the initial pass.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h4>District-sibling inference</h4>
+          <p>For public schools without URLs, we infer the likely URL pattern
+          from the district domain and school name (e.g., sub-directory or
+          subdomain). This adds ~7,000 schools at near-zero cost.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h4>OpenStreetMap &amp; WikiData</h4>
+          <p>OSM Overpass queries and WikiData SPARQL retrieve URLs for
+          ~4,000 additional schools, primarily rural private schools
+          and charter networks.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h4>Catholic school networks</h4>
+          <p>Diocese-level directories and the National Catholic Educational
+          Association provide URLs for ~3,500 Catholic schools not otherwise
+          covered.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">5</div>
+        <div class="step-content">
+          <h4>IRS Form 990 data</h4>
+          <p>For private schools organized as 501(c)(3) nonprofits, IRS
+          990 filings (via ProPublica Nonprofit Explorer) provide website
+          URLs for ~700 additional schools.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">6</div>
+        <div class="step-content">
+          <h4>Wayback Machine CDX</h4>
+          <p>Internet Archive CDX API provides historical URL records for
+          ~5,000 schools whose current sites are no longer live but whose
+          archived content remains accessible.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-top:2rem">
+      <p>
+        <strong>Coverage:</strong> After all URL-discovery stages, we have verified
+        URLs for 118,753 / 145,569 schools (81.6%). Public-school coverage is 94.9%;
+        private-school coverage is 40.5%. Remaining gaps are concentrated in
+        small rural private schools and schools that lack a dedicated web presence.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Stage 3: Crawl ────────────────────────────────────── -->
+  <div class="section">
+    <h2>Stage 3 — Web Crawl</h2>
+    <p class="section-lead">
+      We crawl each school's website using a custom Python crawler
+      (Playwright + requests) deployed across a fleet of virtual machines.
+    </p>
+
+    <div class="prose">
+      <h3>Crawl design</h3>
+      <p>
+        For each school, we crawl up to <strong>20 unique pages</strong> beginning
+        from the seed URL. Pages are deduplicated within each school's domain;
+        external links and PDF files are excluded from the page-content corpus
+        (though PDF presence is noted). The crawler follows links only within
+        the school's own domain (or its known subdomains), preventing
+        contamination from linked third-party sites.
+      </p>
+      <p>
+        The crawl collects: page URL, page title, full visible text, HTML
+        structural features (presence of forms, iframes, structured data),
+        and metadata about social media links. We record the crawl date and
+        HTTP status for reproducibility. The full corpus consists of
+        <strong>421,663 pages</strong> across 80,620 schools.
+      </p>
+
+      <h3>Crawl infrastructure</h3>
+      <p>
+        The national crawl was executed in May 2026 across five cloud VMs
+        (shards 0–4), each handling a non-overlapping subset of the school
+        spine. Total crawl time: approximately 48 hours. We cap crawl depth
+        at 3 hops from the homepage to avoid deep-linking into student
+        portals and administrative systems.
+      </p>
+
+      <h3>Exclusions</h3>
+      <ul>
+        <li>Schools whose domain returned HTTP 4xx/5xx for all attempts</li>
+        <li>Schools behind Cloudflare or similar bot-detection at crawl time</li>
+        <li>Schools whose URL resolved to a district homepage (identified by
+            URL pattern mismatch with school name)</li>
+        <li>PDF-only sites (site serves only PDF documents, no HTML text)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ── Stage 4: Topic Classification ────────────────────── -->
+  <div class="section">
+    <h2>Stage 4 — Topic Classification</h2>
+    <p class="section-lead">
+      We classify website text using a structured regex ontology of 23 topics,
+      producing school-level prevalence and prominence scores.
+    </p>
+
+    <div class="prose">
+      <h3>Ontology construction</h3>
+      <p>
+        We develop a <strong>23-topic ontology</strong> covering the main
+        dimensions along which private schools differentiate their public
+        identity. Topics are organized into thematic families: academic
+        programming, faith and values, community and family, financial
+        accessibility, and student support. Each topic is operationalized as
+        a set of regular expressions capturing the vocabulary schools use when
+        discussing that topic.
+      </p>
+      <p>
+        For example, the <em>tuition transparency</em> topic matches phrases
+        like "annual tuition", "financial aid application", "payment plan",
+        "scholarship available", "tuition schedule", and related variants.
+        The <em>religious presence</em> topic matches denominational vocabulary,
+        scriptural references, faith-community language, and mission-statement
+        phrases common to religious schools.
+      </p>
+
+      <h3>Scoring</h3>
+      <p>
+        For each school-page pair, we count the number of regex matches per
+        topic. The school-level <strong>topic score</strong> is the mean
+        count per page, averaged across all unique pages crawled for that
+        school. This averaging controls for variation in the number of pages
+        crawled and ensures comparability across schools of different sizes.
+      </p>
+      <p>
+        We also construct a <strong>binary prevalence</strong> indicator
+        (whether any page of the school's site mentions the topic at all)
+        and a <strong>topic-page count</strong> (number of pages mentioning
+        the topic). All three representations are available in the replication
+        data.
+      </p>
+    </div>
+
+    <h3 style="font-size:1.1rem;font-weight:600;margin:2rem 0 1rem">
+      Six focal topics
+    </h3>
+    <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1.25rem">
+      From the full 23-topic ontology, we highlight six topics that are
+      most clearly defined, have high discriminant validity (low inter-topic
+      correlation), and appear in prior literature on school choice and
+      educational positioning.
+    </p>
+
+    <div class="topic-grid">
+      <div class="topic-card" style="border-top:3px solid #be185d">
+        <div class="t-name">
+          <span class="t-color-dot" style="background:#be185d"></span>
+          Religious Presence
+        </div>
+        <div class="t-desc">
+          Faith mission, denominational affiliation, scripture, spiritual community.
+          Highest in the South and Appalachian states.
+        </div>
+      </div>
+      <div class="topic-card" style="border-top:3px solid #1d4ed8">
+        <div class="t-name">
+          <span class="t-color-dot" style="background:#1d4ed8"></span>
+          Character / Values
+        </div>
+        <div class="t-desc">
+          Character education, leadership, integrity, moral development,
+          social-emotional learning.
+        </div>
+      </div>
+      <div class="topic-card" style="border-top:3px solid #15803d">
+        <div class="t-name">
+          <span class="t-color-dot" style="background:#15803d"></span>
+          Family Partnership
+        </div>
+        <div class="t-desc">
+          Parent engagement, family-school partnership, volunteer programs,
+          community involvement.
+        </div>
+      </div>
+      <div class="topic-card" style="border-top:3px solid #b45309">
+        <div class="t-name">
+          <span class="t-color-dot" style="background:#b45309"></span>
+          College Prep / Rigor
+        </div>
+        <div class="t-desc">
+          AP/IB courses, college counseling, Ivy League outcomes,
+          academic challenge, test preparation.
+        </div>
+      </div>
+      <div class="topic-card" style="border-top:3px solid #7c3aed">
+        <div class="t-name">
+          <span class="t-color-dot" style="background:#7c3aed"></span>
+          Tuition Transparency
+        </div>
+        <div class="t-desc">
+          Visible tuition schedules, financial aid, scholarships,
+          payment plans, cost information.
+        </div>
+      </div>
+      <div class="topic-card" style="border-top:3px solid #b91c1c">
+        <div class="t-name">
+          <span class="t-color-dot" style="background:#b91c1c"></span>
+          STEM Emphasis
+        </div>
+        <div class="t-desc">
+          Science, technology, engineering, math, robotics, coding,
+          maker spaces, innovation labs.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── Outcome data ──────────────────────────────────────── -->
+  <div class="section">
+    <h2>Outcome and context data</h2>
+    <div class="methods-grid">
+      <div class="method-step">
+        <div class="step-num">E</div>
+        <div class="step-content">
+          <h4>Enrollment panels</h4>
+          <p>PSS enrollment data for six waves (2007–08 through 2021–22)
+          form an unbalanced panel. We compute log enrollment growth
+          between consecutive observations as the outcome variable
+          for growth regressions.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">C</div>
+        <div class="step-content">
+          <h4>Closure data</h4>
+          <p>School closure is identified via state DOE records for six
+          states (CA, IL, NY, OH, PA, WI) covering 2018–2025. A school
+          is coded as closed if it appears in earlier PSS waves but not
+          in a subsequent confirmation check.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">G</div>
+        <div class="step-content">
+          <h4>Geographic context</h4>
+          <p>County-level covariates: 2020 presidential vote share
+          (MIT Election Data and Science Lab), religiosity (ARDA),
+          county FIPS (NCES SEDA file). State fixed effects
+          are included in all regressions.</p>
+        </div>
+      </div>
+      <div class="method-step">
+        <div class="step-num">A</div>
+        <div class="step-content">
+          <h4>Achievement data</h4>
+          <p>Stanford Education Data Archive (SEDA) v4.1 provides
+          school- and county-level average test score estimates for
+          public schools. County-level SEDA scores are used to
+          contextualize private-school topic scores.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 School Websites Project. Research use.</span>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank">GitHub ⇗</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

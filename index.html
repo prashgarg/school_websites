@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>School Websites Project — What Private School Websites Reveal</title>
+  <meta name="description" content="Large-scale analysis of 145,569 U.S. school websites revealing how schools position themselves on religion, academic rigor, family partnership, and more." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js"></script>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="brand-icon">SWP</div>
+      <a href="index.html">School Websites Project</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <button id="theme-toggle" title="Toggle theme">☾</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ────────────────────────────────────────────────── -->
+<div class="container">
+  <div class="hero">
+    <div class="hero-eyebrow">
+      <span>📊</span> Working Paper · 2026
+    </div>
+    <h1>What Do <em>Private School Websites</em><br>Reveal About American Education?</h1>
+    <p class="lead">
+      We crawl and analyze the websites of every private and public school in the
+      United States — uncovering how schools signal their identity, values,
+      and academic priorities to prospective families.
+    </p>
+
+    <div class="hero-stats">
+      <div class="stat-item">
+        <span class="stat-num" data-count="145,569">0</span>
+        <span class="stat-label">Schools in universe</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="81,109">0</span>
+        <span class="stat-label">Websites crawled</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="6">0</span>
+        <span class="stat-label">Focal topics</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-num" data-count="421,663">0</span>
+        <span class="stat-label">Pages analyzed</span>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      <a href="explorer.html" class="btn btn-primary">
+        <span>🗺</span> Explore the Map
+      </a>
+      <a href="paper.html" class="btn btn-secondary">
+        <span>📄</span> Read the Paper
+      </a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank" class="btn btn-secondary">
+        <span>⇗</span> GitHub
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ── Key Findings ─────────────────────────────────────────── -->
+<div class="container">
+  <div class="section">
+    <div class="section-label">Key Findings</div>
+    <h2>What the data reveal</h2>
+    <p class="section-lead">
+      Across six focal topics scored from school website text, we find striking
+      geographic patterns and significant associations with enrollment growth and
+      school closure.
+    </p>
+
+    <div class="card-grid">
+
+      <div class="card finding-card">
+        <div class="fc-topic">Tuition Transparency</div>
+        <div class="fc-stat">+4.0 p.p.</div>
+        <h3>Transparency predicts enrollment growth</h3>
+        <p>Schools with higher tuition-transparency scores on their website
+        grow enrollment significantly faster — about 4 percentage points per
+        standard deviation, controlling for state and school characteristics.</p>
+      </div>
+
+      <div class="card finding-card">
+        <div class="fc-topic">Religious Presence</div>
+        <div class="fc-stat">+7.2 pp</div>
+        <h3>Religion tracks Republican geography</h3>
+        <p>Religious emphasis on school websites correlates strongly with
+        county-level Republican vote share (partial r = +0.072***). The
+        partisan gradient is largest for religious content and reversed
+        for STEM and college-prep.</p>
+      </div>
+
+      <div class="card finding-card">
+        <div class="fc-topic">College Prep / Rigor</div>
+        <div class="fc-stat">+2.8 p.p.</div>
+        <h3>Academic rigor signals growth</h3>
+        <p>College-prep emphasis is the second-strongest predictor of
+        enrollment growth. Schools in competitive markets
+        (more private-school competitors within 10 km) show
+        stronger STEM and character signals.</p>
+      </div>
+
+      <div class="card finding-card">
+        <div class="fc-topic">Competition</div>
+        <div class="fc-stat">−0.083</div>
+        <h3>Competition reshapes religious identity</h3>
+        <p>A one-unit increase in log competitor count within 10 km is
+        associated with a −0.083 partial correlation with religious emphasis
+        — schools in more competitive markets de-emphasize religious identity
+        on their websites.</p>
+      </div>
+
+      <div class="card finding-card">
+        <div class="fc-topic">Family Partnership</div>
+        <div class="fc-stat">+0.056</div>
+        <h3>Family engagement matters most in public schools</h3>
+        <p>Among public schools, family-partnership emphasis is the single
+        strongest predictor of school-level SEDA achievement scores
+        (partial r = +0.056***), controlling for county demographics.</p>
+      </div>
+
+      <div class="card finding-card">
+        <div class="fc-topic">Grade Span</div>
+        <div class="fc-stat">K–8 vs. 9–12</div>
+        <h3>Elementary schools respond differently</h3>
+        <p>The enrollment-growth effect of tuition transparency is concentrated
+        among elementary schools. Combined K–12 schools show the largest
+        variation in closure risk, driven by tuition-transparency and
+        character-values signaling.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── What We Measure ──────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">Topics</div>
+    <h2>Six dimensions of school identity</h2>
+    <p class="section-lead">
+      We construct regex-based topic scores from school website text across
+      six focal dimensions, each drawn from a broader 23-topic ontology.
+    </p>
+
+    <div class="topic-chips">
+      <span class="chip active">All topics</span>
+      <span class="chip">Religious presence</span>
+      <span class="chip">Character / values</span>
+      <span class="chip">Family partnership</span>
+      <span class="chip">College prep / rigor</span>
+      <span class="chip">Tuition transparency</span>
+      <span class="chip">STEM emphasis</span>
+    </div>
+
+    <div class="card-grid" id="topic-cards">
+
+      <div class="card" style="border-left: 4px solid #be185d;">
+        <p style="font-size:1.5rem;margin-bottom:.5rem">✝</p>
+        <h3 style="font-size:1rem;margin-bottom:.4rem">Religious Presence</h3>
+        <p style="font-size:.85rem;color:var(--text-muted)">
+          Signals faith-based identity, denominational affiliation, scripture
+          references, and spiritual community values. Highest in the South
+          and Midwest.
+        </p>
+      </div>
+
+      <div class="card" style="border-left: 4px solid #1d4ed8;">
+        <p style="font-size:1.5rem;margin-bottom:.5rem">🌱</p>
+        <h3 style="font-size:1rem;margin-bottom:.4rem">Character / Values</h3>
+        <p style="font-size:.85rem;color:var(--text-muted)">
+          Character development, moral education, leadership, respect, integrity,
+          and social-emotional learning. Associated with LinkedIn and YouTube
+          social media presence.
+        </p>
+      </div>
+
+      <div class="card" style="border-left: 4px solid #15803d;">
+        <p style="font-size:1.5rem;margin-bottom:.5rem">👨‍👩‍👧</p>
+        <h3 style="font-size:1rem;margin-bottom:.4rem">Family Partnership</h3>
+        <p style="font-size:.85rem;color:var(--text-muted)">
+          Parent engagement, family-school collaboration, volunteer programs,
+          and communication infrastructure. Strongest predictor of public-school
+          SEDA achievement.
+        </p>
+      </div>
+
+      <div class="card" style="border-left: 4px solid #b45309;">
+        <p style="font-size:1.5rem;margin-bottom:.5rem">🎓</p>
+        <h3 style="font-size:1rem;margin-bottom:.4rem">College Prep / Rigor</h3>
+        <p style="font-size:.85rem;color:var(--text-muted)">
+          AP courses, college counseling, Ivy League placements, test-prep,
+          and academic challenge. Associated with enrollment growth and
+          competitive markets.
+        </p>
+      </div>
+
+      <div class="card" style="border-left: 4px solid #7c3aed;">
+        <p style="font-size:1.5rem;margin-bottom:.5rem">💰</p>
+        <h3 style="font-size:1rem;margin-bottom:.4rem">Tuition Transparency</h3>
+        <p style="font-size:.85rem;color:var(--text-muted)">
+          Visible tuition schedules, financial aid information, payment plans,
+          and scholarship details. The strongest enrollment predictor
+          in the data.
+        </p>
+      </div>
+
+      <div class="card" style="border-left: 4px solid #b91c1c;">
+        <p style="font-size:1.5rem;margin-bottom:.5rem">🔬</p>
+        <h3 style="font-size:1rem;margin-bottom:.4rem">STEM Emphasis</h3>
+        <p style="font-size:.85rem;color:var(--text-muted)">
+          Science, technology, engineering, math programs, robotics, coding,
+          and maker culture. Positively associated with competition
+          and county achievement.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <!-- ── About ─────────────────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">About</div>
+    <h2>The project</h2>
+    <div class="prose">
+      <p>
+        The School Websites Project is an academic research effort to understand
+        how U.S. schools strategically present themselves to prospective families
+        through their websites. We build a near-complete database of school websites
+        through a multi-stage URL discovery pipeline, then crawl and classify
+        website content using a structured topic ontology.
+      </p>
+      <p>
+        We find that website content is systematically related to enrollment growth,
+        closure risk, competitive environments, geographic context, and student
+        achievement — suggesting that school websites are both mirrors of educational
+        strategy and signals that shape market outcomes.
+      </p>
+      <p>
+        <strong>Data coverage:</strong> PSS (Private School Survey, NCES) and CCD
+        (Common Core of Data, NCES) provide the school universe. We successfully
+        crawl websites for 81,109 of 145,569 U.S. schools (55.7%), including
+        94.9% of public schools and 40.5% of private schools.
+      </p>
+    </div>
+
+    <div class="info-box mt-3">
+      <p>
+        <strong>Working paper available soon.</strong> This site accompanies
+        a working paper currently in preparation. Data and replication materials
+        will be made public upon submission.
+        Questions? Contact <a href="mailto:prashantgargib@gmail.com">prashantgargib@gmail.com</a>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 School Websites Project. Research use.</span>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank">GitHub ⇗</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

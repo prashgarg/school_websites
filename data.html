@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data — School Websites Project</title>
+  <meta name="description" content="Data downloads and documentation for the School Websites Project dataset." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js"></script>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="brand-icon">SWP</div>
+      <a href="index.html">School Websites Project</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html" class="active">Data</a>
+      <button id="theme-toggle" title="Toggle theme">☾</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="coming-soon">
+    <div class="cs-icon">🗄</div>
+    <h2>Data downloads coming soon</h2>
+    <p class="cs-lead">
+      We are preparing the full dataset for public release, including
+      school-level topic scores, the URL discovery pipeline, and the
+      web crawl corpus. Release is planned to coincide with journal submission.
+    </p>
+
+    <div class="info-box" style="max-width:480px;text-align:left;margin-top:0">
+      <p>
+        <strong>What will be available:</strong><br>
+        School-level topic scores (all 23 topics) · URL database ·
+        County and state aggregates · Stata/R/Python replication code ·
+        Data dictionary and codebook
+      </p>
+    </div>
+
+    <div class="cs-notify">
+      <a href="mailto:prashantgargib@gmail.com?subject=School Websites Project — data release notification"
+         class="btn btn-primary">
+        ✉ Notify me when data is available
+      </a>
+      <a href="methods.html" class="btn btn-secondary">
+        Read the Methods
+      </a>
+    </div>
+
+    <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--border);width:100%;max-width:680px;text-align:left">
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:1rem">Preview data available now</h3>
+      <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1rem">
+        State- and county-level aggregate topic scores are available
+        in the interactive <a href="explorer.html">Explorer</a>.
+        The underlying JSON is available directly:
+      </p>
+      <div style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);padding:0.875rem 1rem;font-family:monospace;font-size:0.8rem;color:var(--text-muted)">
+        data/school_summary.json
+        <span style="float:right;font-family:var(--font-sans);font-size:0.75rem">77 KB</span>
+      </div>
+      <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem">
+        Contains state means, county means (first 500), and metadata.
+        See <a href="methods.html">Methods</a> for variable definitions.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 School Websites Project. Research use.</span>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank">GitHub ⇗</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

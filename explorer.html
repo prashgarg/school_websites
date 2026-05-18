@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Explorer — School Websites Project</title>
+  <meta name="description" content="Interactive map explorer: explore how U.S. private schools emphasize different topics on their websites, by state and county." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js"></script>
+  <!-- Plotly.js from CDN (no API key needed) -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <style>
+    /* Explorer-specific tweaks */
+    .meta-strip {
+      display: flex; gap: 2rem; flex-wrap: wrap;
+      padding: 1rem 1.5rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+    }
+    .meta-item { text-align: center; }
+    .meta-item .mv { font-size: 1.1rem; font-weight: 700; color: var(--primary-light); }
+    .meta-item .ml { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); margin-top: 2px; }
+    #loading-indicator {
+      display: none;
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .page-hero { padding: 2.5rem 0 1.5rem; }
+    .page-hero h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .page-hero p { color: var(--text-muted); font-size: 0.95rem; max-width: 600px; }
+    .table-wrapper { overflow-x: auto; margin-top: 1rem; max-height: 380px; overflow-y: auto; }
+    .sticky-header thead th { position: sticky; top: 0; background: var(--bg-card); z-index: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="brand-icon">SWP</div>
+      <a href="index.html">School Websites Project</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html" class="active">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <button id="theme-toggle" title="Toggle theme">☾</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Page header ─────────────────────────────────────────── -->
+<div class="container">
+  <div class="page-hero">
+    <h1>Topic Explorer</h1>
+    <p>Select a topic below to see how private schools in each state emphasize
+    that dimension on their websites. Scores are mean topic prominence scores
+    across all crawled private schools in each state.</p>
+  </div>
+
+  <!-- Metadata strip -->
+  <div class="meta-strip">
+    <div class="meta-item">
+      <div class="mv" id="meta-total">—</div>
+      <div class="ml">Schools in universe</div>
+    </div>
+    <div class="meta-item">
+      <div class="mv" id="meta-crawled">—</div>
+      <div class="ml">Websites crawled</div>
+    </div>
+    <div class="meta-item">
+      <div class="mv" id="meta-private">—</div>
+      <div class="ml">Private crawled</div>
+    </div>
+    <div class="meta-item">
+      <div class="mv" id="meta-public">—</div>
+      <div class="ml">Public crawled</div>
+    </div>
+    <div class="meta-item">
+      <div class="mv" id="meta-states">—</div>
+      <div class="ml">States</div>
+    </div>
+    <div class="meta-item">
+      <div class="mv" id="meta-counties">—</div>
+      <div class="ml">Counties</div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div id="loading-indicator">⏳ Loading data…</div>
+
+  <!-- Main two-column layout -->
+  <div class="explorer-layout">
+
+    <!-- Sidebar -->
+    <div class="explorer-sidebar">
+      <div class="card">
+        <div class="sidebar-section">
+          <div class="sidebar-label">Select Topic</div>
+          <ul class="topic-select-list" id="topic-list"></ul>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--border);margin:1rem 0">
+
+        <div class="sidebar-section">
+          <div class="sidebar-label">About the scores</div>
+          <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.55">
+            Scores are the sum of matched regex hits per page, averaged across
+            all unique pages for a school, then averaged across schools in
+            each state. Higher = more prominent emphasis on that topic.
+          </p>
+        </div>
+
+        <div class="sidebar-section mt-2">
+          <div class="sidebar-label">Coverage note</div>
+          <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.55">
+            Map shows private schools only. Public-school data is available
+            in the full dataset download. See
+            <a href="methods.html">Methods</a> for details.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main panels -->
+    <div class="map-panel">
+
+      <div class="card" style="margin-bottom:1rem">
+        <h3 id="topic-header" style="font-size:1rem;font-weight:600;margin-bottom:0.75rem">
+          Loading…
+        </h3>
+        <div id="map-container" class="map-container"></div>
+        <p class="map-note">
+          Private schools only · Mean topic prominence score · Hover for state details
+        </p>
+      </div>
+
+      <!-- Two-column chart row -->
+      <div class="chart-row">
+        <div class="card">
+          <h4 style="font-size:0.85rem;font-weight:600;margin-bottom:0.75rem;color:var(--text-muted)">
+            TOP 20 STATES BY SCORE
+          </h4>
+          <div id="bar-container" class="chart-container"></div>
+        </div>
+
+        <div class="card">
+          <h4 style="font-size:0.85rem;font-weight:600;margin-bottom:0.75rem;color:var(--text-muted)">
+            ALL STATES RANKED
+          </h4>
+          <div class="table-wrapper">
+            <table class="data-table sticky-header" id="state-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>State</th>
+                  <th>Score</th>
+                  <th style="text-align:right">Crawled</th>
+                  <th style="text-align:right">Total</th>
+                </tr>
+              </thead>
+              <tbody id="state-tbody">
+                <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem">
+                  Loading…
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /map-panel -->
+  </div><!-- /explorer-layout -->
+
+  <!-- Notes -->
+  <div style="margin-top:2rem">
+    <p style="font-size:0.8rem;color:var(--text-muted);line-height:1.6">
+      <strong>Notes:</strong>
+      Topic scores are constructed from a regex-based ontology applied to crawled
+      school website text. Scores represent the mean number of matched phrases per
+      page, averaged across all unique pages crawled for each school, then averaged
+      across schools within each state. Only schools with at least one page crawled
+      are included. Crawl conducted May 2026. Private school universe from PSS 2021–22
+      (NCES). All six topics are drawn from the focal subset of a 23-topic ontology;
+      see <a href="methods.html">Methods</a> for full details.
+    </p>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 School Websites Project. Research use.</span>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank">GitHub ⇗</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/explorer.js"></script>
+</body>
+</html>

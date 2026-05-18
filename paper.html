@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paper — School Websites Project</title>
+  <meta name="description" content="Working paper on school website content and enrollment and closure outcomes." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js"></script>
+  <style>
+    .abstract-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary-light);
+      border-radius: var(--radius);
+      padding: 2rem;
+      max-width: 760px;
+      margin-top: 2rem;
+    }
+    .abstract-box h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .abstract-box p {
+      font-size: 0.95rem;
+      line-height: 1.75;
+      color: var(--text);
+    }
+    .authors {
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      background: color-mix(in srgb, var(--accent) 15%, var(--bg));
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      color: #b45309;
+      border-radius: 100px;
+      padding: 0.3rem 0.75rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Navigation ──────────────────────────────────────────── -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <div class="brand-icon">SWP</div>
+      <a href="index.html">School Websites Project</a>
+    </div>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html" class="active">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <button id="theme-toggle" title="Toggle theme">☾</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div style="padding: 3.5rem 0 2rem;">
+
+    <div class="status-chip">⏳ Working Paper · In preparation</div>
+
+    <h1 style="font-size:1.9rem;font-weight:700;letter-spacing:-0.025em;max-width:760px;margin-top:1.5rem;line-height:1.2">
+      Selling School: How Private School Websites Signal
+      Identity, Rigor, and Transparency
+    </h1>
+
+    <div class="authors">
+      Prashant Garg &nbsp;·&nbsp; [Coauthor TBD] &nbsp;·&nbsp; Working paper, 2026
+    </div>
+
+    <div class="abstract-box">
+      <h3>Abstract</h3>
+      <p>
+        We construct a near-complete database of U.S. private school websites —
+        crawling 14,384 private school sites and classifying content across
+        23 topics using a structured regex ontology. We document wide variation
+        in how schools present themselves along six focal dimensions: religious
+        identity, character and values, family partnership, college-preparatory
+        rigor, tuition transparency, and STEM emphasis.
+      </p>
+      <p style="margin-top:1rem">
+        Schools with higher tuition-transparency scores grow enrollment
+        4.0 percentage points faster per standard deviation (p &lt; 0.001),
+        and college-prep emphasis predicts 2.8 percentage-point faster growth.
+        In more competitive markets, schools shift away from religious emphasis
+        (partial r = −0.083) toward STEM and character signals. Tuition
+        transparency is positively associated with closure risk among
+        K–12 schools, consistent with a "last resort" transparency model.
+        Religious emphasis on websites tracks county Republican vote share
+        (r = +0.072***) and is negatively correlated with all other topics at
+        the county level.
+      </p>
+      <p style="margin-top:1rem">
+        These results suggest that school websites are not mere
+        brochures — they are strategic signals in a competitive market that
+        predict real enrollment and survival outcomes.
+      </p>
+    </div>
+
+    <div style="display:flex;gap:0.875rem;flex-wrap:wrap;margin-top:2rem">
+      <a href="methods.html" class="btn btn-primary">
+        📋 Read the Methods
+      </a>
+      <a href="explorer.html" class="btn btn-secondary">
+        🗺 Explore the Data
+      </a>
+    </div>
+
+    <hr class="divider" />
+
+    <div style="max-width:680px">
+      <h2 style="font-size:1.35rem;font-weight:700;margin-bottom:1rem">Selected results</h2>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-bottom:2rem">
+
+        <div class="card" style="border-top:3px solid var(--primary-light)">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--primary-light);font-weight:600;margin-bottom:.4rem">Enrollment Growth</div>
+          <div style="font-size:1.4rem;font-weight:700;margin-bottom:.4rem">+4.0 pp / SD</div>
+          <p style="font-size:.85rem;color:var(--text-muted);line-height:1.5">
+            Each standard deviation of tuition-transparency score is associated
+            with 4.0 percentage points faster annual enrollment growth
+            (cluster-robust OLS, state FE, n ≈ 50k school-years).
+          </p>
+        </div>
+
+        <div class="card" style="border-top:3px solid var(--primary-light)">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--primary-light);font-weight:600;margin-bottom:.4rem">Competition</div>
+          <div style="font-size:1.4rem;font-weight:700;margin-bottom:.4rem">r = −0.083***</div>
+          <p style="font-size:.85rem;color:var(--text-muted);line-height:1.5">
+            More competitors within 10 km (log count) is associated with
+            reduced religious emphasis — a one-unit increase in log competition
+            corresponds to roughly one-third of a within-state SD.
+          </p>
+        </div>
+
+        <div class="card" style="border-top:3px solid var(--primary-light)">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--primary-light);font-weight:600;margin-bottom:.4rem">Geography</div>
+          <div style="font-size:1.4rem;font-weight:700;margin-bottom:.4rem">r = +0.072***</div>
+          <p style="font-size:.85rem;color:var(--text-muted);line-height:1.5">
+            Religious emphasis correlates with Republican county vote share;
+            STEM (r = −0.074***) and tuition transparency (r = −0.088***)
+            are negatively correlated, revealing a clear partisan gradient.
+          </p>
+        </div>
+
+        <div class="card" style="border-top:3px solid var(--primary-light)">
+          <div style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.07em;color:var(--primary-light);font-weight:600;margin-bottom:.4rem">Social Media</div>
+          <div style="font-size:1.4rem;font-weight:700;margin-bottom:.4rem">r = +0.239***</div>
+          <p style="font-size:.85rem;color:var(--text-muted);line-height:1.5">
+            LinkedIn presence correlates most strongly with character/values
+            scores. TikTok presence is negatively correlated with religious
+            emphasis (r = −0.015*).
+          </p>
+        </div>
+
+      </div>
+
+      <div class="info-box">
+        <p>
+          <strong>Full paper coming soon.</strong> We are preparing the manuscript
+          for journal submission. Data and replication code will be released
+          upon submission. Sign up to be notified:
+          <a href="mailto:prashantgargib@gmail.com?subject=School Websites Project — notify me">
+            prashantgargib@gmail.com
+          </a>
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── Footer ───────────────────────────────────────────────── -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">© 2026 School Websites Project. Research use.</span>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="explorer.html">Explorer</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank">GitHub ⇗</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
