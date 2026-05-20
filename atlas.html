@@ -25,6 +25,27 @@
       font-size: 0.9rem;
       max-width: 620px;
     }
+    .atlas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+    .atlas-header > p { flex: 1 1 480px; }
+    .atlas-search {
+      flex: 0 0 320px;
+      max-width: 360px;
+    }
+    .atlas-search input {
+      width: 100%;
+      padding: 0.55rem 0.85rem;
+      font-size: 0.88rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+    }
 
     /* Unit-of-analysis tabs */
     .unit-tabs {
@@ -395,10 +416,16 @@
 
   <div class="atlas-header">
     <h1>Atlas</h1>
-    <p>U.S.&nbsp;K&ndash;12 school-website content at four scales: national,
-    state, county, and individual school. Pick a unit of analysis, choose a
-    topic, optionally filter by sector. The Compare and Correlations tabs add
-    bivariate and multi-topic views.</p>
+    <p>U.S.&nbsp;K&ndash;12 school-website content at three scales: national,
+    state, and county. Pick a unit of analysis, choose a topic, optionally
+    filter by sector. The Compare and Correlations tabs add bivariate and
+    multi-topic views. To look up a specific school, use the search box on
+    the right &mdash; the school-level index loads only when you start typing.</p>
+
+    <div class="search-wrap atlas-search">
+      <input type="text" id="school-search" placeholder="Search a school by name (lazy-loaded on first keystroke)..." autocomplete="off" />
+      <div class="search-results" id="school-search-results"></div>
+    </div>
   </div>
 
   <!-- Global controls: sector toggle + topic chooser -->
@@ -430,12 +457,23 @@
   <!-- Unit-of-analysis tabs -->
   <div class="unit-tabs" id="unit-tabs">
     <button class="unit-tab active" data-unit="national">National</button>
-    <button class="unit-tab" data-unit="schools">Schools</button>
     <button class="unit-tab" data-unit="states">States</button>
     <button class="unit-tab" data-unit="counties">Counties</button>
     <button class="unit-tab" data-unit="topics">Topics</button>
     <button class="unit-tab" data-unit="compare">Compare</button>
     <button class="unit-tab" data-unit="correlations">Correlations</button>
+  </div>
+
+  <!-- Floating school profile card (populated by search) -->
+  <div class="school-profile-card" id="school-profile-card">
+    <div class="spc-head">
+      <div>
+        <h4 id="spc-name">&mdash;</h4>
+        <div class="spc-meta" id="spc-meta">&mdash;</div>
+      </div>
+      <button class="spc-close" id="spc-close">Close</button>
+    </div>
+    <div class="spc-chart" id="spc-chart" style="height: 240px;"></div>
   </div>
 
   <!-- ── National panel ──────────────────────────────── -->
@@ -490,40 +528,6 @@
     </div>
   </div>
 
-  <!-- ── Schools panel (school-level WebGL scattergeo) ── -->
-  <div class="unit-panel" id="panel-schools">
-    <div class="schools-toolbar">
-      <div class="search-wrap">
-        <input type="text" id="school-search" placeholder="Search a school by name&hellip;" autocomplete="off" />
-        <div class="search-results" id="school-search-results"></div>
-      </div>
-      <span class="meta-note" id="schools-count-note">Loading school-level data&hellip;</span>
-    </div>
-    <div class="map-card">
-      <div class="map-meta">
-        <h3 id="schools-map-title">Topic intensity by school</h3>
-        <span class="meta-note">Each dot = one school. Color = topic intensity (log-scaled, percentile). Hover for name.</span>
-      </div>
-      <div id="schools-map" class="map-container" style="height: 520px;"></div>
-    </div>
-    <div class="school-profile-card" id="school-profile-card">
-      <div class="spc-head">
-        <div>
-          <h4 id="spc-name">&mdash;</h4>
-          <div class="spc-meta" id="spc-meta">&mdash;</div>
-        </div>
-        <button class="spc-close" id="spc-close">Close</button>
-      </div>
-      <div class="spc-chart" id="spc-chart"></div>
-    </div>
-    <p class="help-text">
-      School-level layer: 116,862 schools placed by latitude/longitude (PSS for
-      private, NCES EDGE for public). Topic intensity is a per-school
-      log-scaled, top-percentile-normalized score. Sector filter applies. School
-      search matches substrings in the full national universe.
-    </p>
-  </div>
-
   <!-- ── States panel ───────────────────────────────── -->
   <div class="unit-panel" id="panel-states">
     <div class="map-card" style="margin-bottom: 1.5rem;">
@@ -559,7 +563,7 @@
     <div class="state-profile" id="state-profile">
       <div class="state-profile-header">
         <h3 id="state-profile-name">&mdash;</h3>
-        <button onclick="document.getElementById('state-profile').classList.remove('open')">Close</button>
+        <button id="state-profile-close-btn">Close</button>
       </div>
       <div class="state-profile-chart" id="state-profile-chart"></div>
     </div>

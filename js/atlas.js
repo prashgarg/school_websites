@@ -1,12 +1,16 @@
 /* School Websites Project — atlas.js
-   Renders the Atlas page across four units of analysis: National, States,
-   Counties, Topics. Depends on Plotly (loaded in atlas.html).            */
+   Renders the Atlas page across six units of analysis:
+   National, States, Counties, Topics, Compare, Correlations.
+
+   A lightweight school search index is loaded lazily on first keystroke,
+   so the initial page paint stays small. There is no school-level map.
+*/
 
 (function () {
   "use strict";
 
-  const DATA_URL  = "data/school_summary.json";
-  const DOTS_URL  = "data/school_dots.json";
+  const DATA_URL   = "data/school_summary.json";
+  const SEARCH_URL = "data/school_search_index.json";
 
   const TOPICS = [
     { key: "religious",            label: "Religious identity",   scale: "RdPu",    color: "#be185d" },
@@ -17,8 +21,7 @@
     { key: "stem",                 label: "STEM emphasis",        scale: "YlOrRd",  color: "#b91c1c" },
   ];
 
-  // Cross-sector breakdown — sourced from features_national_20260517_v3.csv.
-  // Each row is one topic with prevalence (% schools with any keyword hit).
+  // Cross-sector breakdown for the National panel
   const SECTOR_BREAKDOWN = [
     { topic: "Religious identity",   priv: 70.0, pub: 23.8, chart: 21.3 },
     { topic: "Family partnership",   priv: 64.0, pub: 64.5, chart: 67.5 },
@@ -36,15 +39,15 @@
 
   const PLOTLY_BASE = { responsive: true, displayModeBar: false };
 
-  let DATA  = null;
-  let DOTS  = null;      // school_dots.json, loaded lazily
-  let activeTopic = TOPICS[4];   // Tuition transparency = headline result
-  let activeSector = "all";       // all | private | public | charter
-  let activeScale  = "continuous"; // continuous | quintile
-  let activeUnit   = "national";   // current panel
+  let DATA   = null;
+  let SEARCH = null;       // lightweight per-school index, lazy-loaded
+  let searchLoadingPromise = null;
+  let activeTopic  = TOPICS[4];      // Tuition transparency = headline
+  let activeSector = "all";          // all | private | public | charter
+  let activeScale  = "continuous";   // continuous | quintile
+  let activeUnit   = "national";
 
   /* ── Bootstrap ─────────────────────────────────────────── */
-
   function init() {
     populateTopicChips();
     renderSectorBreakdown();
@@ -54,6 +57,7 @@
     populateBivariateSelects();
     bindSearchBox();
     bindSchoolProfileClose();
+    applyControlVisibility();
 
     fetch(DATA_URL)
       .then((r) => r.json())
@@ -73,10 +77,10 @@
   }
 
   /* ── Topic chips ──────────────────────────────────────── */
-
   function populateTopicChips() {
     const row = document.getElementById("topic-row");
     if (!row) return;
+    row.innerHTML = "";
     TOPICS.forEach((t, i) => {
       const b = document.createElement("button");
       b.className = "topic-chip" + (i === 4 ? " active" : "");
@@ -86,17 +90,17 @@
         document.querySelectorAll(".topic-chip").forEach((x) => x.classList.remove("active"));
         b.classList.add("active");
         activeTopic = t;
-        if (DATA) {
-          renderStatesPanel();
-          renderCountiesPanel();
-        }
+        if (!DATA) return;
+        if (activeUnit === "states")   renderStatesPanel();
+        if (activeUnit === "counties") renderCountiesPanel();
+        if (activeUnit === "topics")   renderTopicsGrid();
+        if (activeUnit === "correlations" && SEARCH) renderCorrelationsPanel();
       });
       row.appendChild(b);
     });
   }
 
   /* ── Unit tabs ────────────────────────────────────────── */
-
   function bindUnitTabs() {
     document.querySelectorAll(".unit-tab").forEach((tab) => {
       tab.addEventListener("click", () => {
@@ -105,48 +109,35 @@
         document.querySelectorAll(".unit-tab").forEach((t) => t.classList.remove("active"));
         document.querySelectorAll(".unit-panel").forEach((p) => p.classList.remove("active"));
         tab.classList.add("active");
-        document.getElementById("panel-" + unit).classList.add("active");
+        const panel = document.getElementById("panel-" + unit);
+        if (panel) panel.classList.add("active");
         applyControlVisibility();
-        // Lazy-load school dots only when first needed
-        if ((unit === "schools" || unit === "correlations") && !DOTS) {
-          loadDots().then(() => {
-            if (activeUnit === "schools") renderSchoolsPanel();
+
+        if (unit === "correlations") {
+          ensureSearchIndex().then(() => {
             if (activeUnit === "correlations") renderCorrelationsPanel();
           });
-        } else if (unit === "schools") {
-          renderSchoolsPanel();
-        } else if (unit === "correlations") {
-          renderCorrelationsPanel();
         } else if (unit === "compare" && DATA) {
           renderComparePanel();
         }
         if (DATA) window.dispatchEvent(new Event("resize"));
       });
     });
-    applyControlVisibility();
   }
 
-  /* Decide which global controls + topic chooser to show per panel */
   function applyControlVisibility() {
     const topicRow = document.getElementById("topic-row");
     const scaleGrp = document.getElementById("scale-group");
     const sectorNote = document.getElementById("sector-note");
     if (!topicRow) return;
-    // Topic chooser meaningless on National (numbers shown) and Compare (its own selectors)
     const hideTopic = (activeUnit === "national" || activeUnit === "compare");
     topicRow.style.display = hideTopic ? "none" : "flex";
-    // Color scale toggle relevant on states / counties / schools
-    const showScale = (activeUnit === "states" || activeUnit === "counties" || activeUnit === "schools" || activeUnit === "compare");
+    const showScale = (activeUnit === "states" || activeUnit === "counties");
     if (scaleGrp) scaleGrp.style.display = showScale ? "flex" : "none";
-    // Sector toggle note: it filters dots/correlations; state/county aggregates are private-only
     if (sectorNote) {
-      if (activeUnit === "schools" || activeUnit === "correlations") {
-        sectorNote.textContent = "Filter applies";
-      } else if (activeUnit === "states" || activeUnit === "counties" || activeUnit === "topics") {
-        sectorNote.textContent = "State/county layer = private only";
-      } else {
-        sectorNote.textContent = "";
-      }
+      if (activeUnit === "correlations") sectorNote.textContent = "Filter applies to correlations";
+      else if (activeUnit === "states" || activeUnit === "counties" || activeUnit === "topics") sectorNote.textContent = "State/county aggregates = private only";
+      else sectorNote.textContent = "";
     }
   }
 
@@ -157,8 +148,7 @@
         document.querySelectorAll("#sector-toggle .seg-btn").forEach((x) => x.classList.remove("active"));
         b.classList.add("active");
         activeSector = b.dataset.sector;
-        if (activeUnit === "schools") renderSchoolsPanel();
-        if (activeUnit === "correlations") renderCorrelationsPanel();
+        if (activeUnit === "correlations" && SEARCH) renderCorrelationsPanel();
       });
     });
   }
@@ -168,21 +158,15 @@
         document.querySelectorAll("[data-scale]").forEach((x) => x.classList.remove("active"));
         b.classList.add("active");
         activeScale = b.dataset.scale;
-        if (activeUnit === "schools")  renderSchoolsPanel();
         if (activeUnit === "states")   renderStatesPanel();
         if (activeUnit === "counties") renderCountiesPanel();
-        if (activeUnit === "compare")  renderComparePanel();
       });
     });
   }
 
   /* ── Coverage strip ───────────────────────────────────── */
-
   function renderCoverageStrip(meta) {
-    const set = (id, v) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     if (!meta) return;
     set("cv-total",    fmt(meta.total_schools));
     set("cv-crawled",  fmt(meta.crawled_schools));
@@ -191,19 +175,13 @@
     set("cv-states",   fmt(meta.n_states));
     set("cv-counties", fmt(meta.n_counties));
   }
-
-  function fmt(n) {
-    if (n == null) return "—";
-    return Number(n).toLocaleString();
-  }
+  function fmt(n) { return n == null ? "—" : Number(n).toLocaleString(); }
 
   /* ── National: sector breakdown bars ──────────────────── */
-
   function renderSectorBreakdown() {
     const target = document.getElementById("nat-sector-bars");
     if (!target) return;
     target.innerHTML = SECTOR_BREAKDOWN.map((row) => {
-      // Use the max value to scale the bars proportionally within each row
       const maxv = Math.max(row.priv, row.pub, row.chart);
       const wpc = (v) => (100 * v / maxv).toFixed(1);
       return `
@@ -227,83 +205,74 @@
     }).join("");
   }
 
-  /* ── States panel: map + table + bar ─────────────────── */
-
+  /* ── States panel ─────────────────────────────────────── */
   function renderStatesPanel() {
     if (!DATA || !DATA.states) return;
     const t = activeTopic;
     const rows = DATA.states.filter((s) => s[t.key] != null);
+    const titleEl = document.getElementById("state-map-title");
+    if (titleEl) titleEl.textContent = t.label + " — state-level mean";
 
-    document.getElementById("state-map-title").textContent =
-      t.label + " — state-level mean";
+    let z = rows.map((r) => r[t.key]);
+    if (activeScale === "quintile") {
+      const sorted = z.slice().sort((a,b)=>a-b);
+      const cuts = [0.2,0.4,0.6,0.8].map((p) => sorted[Math.floor(p*sorted.length)]);
+      z = z.map((v) => cuts.reduce((acc,c)=>acc+(v>c?1:0), 0));
+    }
 
-    // Choropleth
-    const z = rows.map((r) => r[t.key]);
     Plotly.react("state-map", [{
-      type: "choropleth",
-      locationmode: "USA-states",
+      type: "choropleth", locationmode: "USA-states",
       locations: rows.map((r) => r.state),
-      z: z,
-      colorscale: t.scale,
-      reversescale: false,
-      colorbar: { title: { text: "Mean", font: { size: 11 } }, thickness: 12, len: 0.7 },
+      z: z, colorscale: t.scale,
+      colorbar: { title: { text: activeScale==="quintile"?"Quintile":"Mean", font: { size: 11 } }, thickness: 12, len: 0.7 },
       text: rows.map((r) => `${r.state}<br>${r[t.key].toFixed(1)} · n=${r.crawled}`),
       hovertemplate: "%{text}<extra></extra>",
     }], {
       geo: { scope: "usa", projection: { type: "albers usa" }, showlakes: false, bgcolor: "rgba(0,0,0,0)" },
       margin: { l: 0, r: 0, t: 0, b: 0 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
     }, PLOTLY_BASE);
 
-    document.getElementById("state-map").on("plotly_click", (e) => {
-      if (e && e.points && e.points[0]) {
-        const st = e.points[0].location;
-        openStateProfile(st);
-      }
-    });
+    const mapEl = document.getElementById("state-map");
+    if (mapEl && mapEl.on) {
+      mapEl.on("plotly_click", (e) => {
+        if (e && e.points && e.points[0]) openStateProfile(e.points[0].location);
+      });
+    }
 
-    // Sorted table
     const sorted = rows.slice().sort((a, b) => b[t.key] - a[t.key]);
     const tbody = document.getElementById("state-tbody");
-    tbody.innerHTML = sorted.map((r, i) => `
-      <tr class="clickable" data-state="${r.state}">
-        <td>${i + 1}</td>
-        <td>${r.state}</td>
-        <td class="num">${r[t.key].toFixed(1)}</td>
-        <td class="num">${fmt(r.crawled)}</td>
-      </tr>`).join("");
-    tbody.querySelectorAll("tr").forEach((tr) => {
-      tr.addEventListener("click", () => openStateProfile(tr.dataset.state));
-    });
+    if (tbody) {
+      tbody.innerHTML = sorted.map((r, i) => `
+        <tr class="clickable" data-state="${r.state}">
+          <td>${i + 1}</td><td>${r.state}</td>
+          <td class="num">${r[t.key].toFixed(1)}</td>
+          <td class="num">${fmt(r.crawled)}</td>
+        </tr>`).join("");
+      tbody.querySelectorAll("tr").forEach((tr) => {
+        tr.addEventListener("click", () => openStateProfile(tr.dataset.state));
+      });
+    }
 
-    // Top 10 + bottom 10 bar chart
     const top10 = sorted.slice(0, 10);
     const bot10 = sorted.slice(-10).reverse();
     Plotly.react("state-bars", [
-      {
-        type: "bar", orientation: "h",
+      { type: "bar", orientation: "h",
         x: top10.map((r) => r[t.key]).reverse(),
         y: top10.map((r) => r.state).reverse(),
-        marker: { color: t.color },
-        name: "Top 10",
-        hovertemplate: "%{y}: %{x:.1f}<extra></extra>",
-      },
-      {
-        type: "bar", orientation: "h",
+        marker: { color: t.color }, name: "Top 10",
+        hovertemplate: "%{y}: %{x:.1f}<extra></extra>" },
+      { type: "bar", orientation: "h",
         x: bot10.map((r) => r[t.key]).reverse(),
         y: bot10.map((r) => r.state).reverse(),
-        marker: { color: "#94a3b8" },
-        name: "Bottom 10",
+        marker: { color: "#94a3b8" }, name: "Bottom 10",
         xaxis: "x2", yaxis: "y2",
-        hovertemplate: "%{y}: %{x:.1f}<extra></extra>",
-      },
+        hovertemplate: "%{y}: %{x:.1f}<extra></extra>" },
     ], {
       grid: { rows: 1, columns: 2, pattern: "independent" },
       margin: { l: 36, r: 16, t: 28, b: 26 },
       showlegend: false,
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
       font: { size: 11 },
       annotations: [
         { text: "Top 10", x: 0.22, y: 1.05, xref: "paper", yref: "paper", showarrow: false, font: { size: 11, color: "#64748b" } },
@@ -320,17 +289,17 @@
     if (!DATA || !DATA.states) return;
     const row = DATA.states.find((s) => s.state === stateCode);
     if (!row) return;
-    document.getElementById("state-profile").classList.add("open");
+    const card = document.getElementById("state-profile");
+    if (!card) return;
+    card.classList.add("open");
     document.getElementById("state-profile-name").textContent =
       `${stateCode} — six-topic profile (n=${row.crawled})`;
-
     const rankByTopic = {};
     TOPICS.forEach((t) => {
-      const sorted = DATA.states.slice().filter((s) => s[t.key] != null).sort((a, b) => b[t.key] - a[t.key]);
-      const i = sorted.findIndex((s) => s.state === stateCode);
+      const s = DATA.states.slice().filter((x) => x[t.key] != null).sort((a, b) => b[t.key] - a[t.key]);
+      const i = s.findIndex((x) => x.state === stateCode);
       rankByTopic[t.key] = i >= 0 ? i + 1 : null;
     });
-
     Plotly.react("state-profile-chart", [{
       type: "bar", orientation: "h",
       x: TOPICS.map((t) => row[t.key]),
@@ -339,204 +308,136 @@
       hovertemplate: "%{y}: %{x:.1f}<extra></extra>",
     }], {
       margin: { l: 200, r: 24, t: 12, b: 32 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
       font: { size: 11 },
       xaxis: { title: { text: "Mean keyword matches per page", font: { size: 11 } } },
     }, PLOTLY_BASE);
-
-    document.getElementById("state-profile").scrollIntoView({ behavior: "smooth", block: "start" });
+    card.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  /* ── Counties panel: choropleth ──────────────────────── */
+  /* Bind the state-profile close button (was inline onclick — now reliably bound) */
+  function bindStateProfileClose() {
+    const cards = document.querySelectorAll(".state-profile button");
+    cards.forEach((b) => b.addEventListener("click", () => document.getElementById("state-profile").classList.remove("open")));
+  }
 
+  /* ── Counties panel ───────────────────────────────────── */
   function renderCountiesPanel() {
     if (!DATA || !DATA.counties) return;
     const t = activeTopic;
     const rows = DATA.counties.filter((c) => c[t.key] != null);
+    const titleEl = document.getElementById("county-map-title");
+    if (titleEl) titleEl.textContent = t.label + " — county-level mean (" + rows.length.toLocaleString() + " counties, all 50 states)";
 
-    document.getElementById("county-map-title").textContent =
-      t.label + " — county-level mean (top 500 by sample)";
+    let z = rows.map((r) => r[t.key]);
+    if (activeScale === "quintile") {
+      const sorted = z.slice().sort((a,b)=>a-b);
+      const cuts = [0.2,0.4,0.6,0.8].map((p) => sorted[Math.floor(p*sorted.length)]);
+      z = z.map((v) => cuts.reduce((acc,c)=>acc+(v>c?1:0), 0));
+    }
 
     Plotly.react("county-map", [{
       type: "choropleth",
       locationmode: "geojson-id",
       geojson: "https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json",
-      locations: rows.map((r) => String(Math.round(r.fips)).padStart(5, "0")),
-      z: rows.map((r) => r[t.key]),
-      colorscale: t.scale,
-      colorbar: { title: { text: "Mean", font: { size: 11 } }, thickness: 12, len: 0.7 },
-      hovertemplate: "FIPS %{location}: %{z:.1f}<extra></extra>",
+      locations: rows.map((r) => String(r.fips).padStart(5, "0")),
+      z: z, colorscale: t.scale,
+      colorbar: { title: { text: activeScale==="quintile"?"Quintile":"Mean", font: { size: 11 } }, thickness: 12, len: 0.7 },
+      text: rows.map((r) => `FIPS ${r.fips} · n=${r.n||""}<br>${r[t.key].toFixed(1)}`),
+      hovertemplate: "%{text}<extra></extra>",
     }], {
       geo: { scope: "usa", projection: { type: "albers usa" }, showlakes: false, bgcolor: "rgba(0,0,0,0)" },
       margin: { l: 0, r: 0, t: 0, b: 0 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
     }, PLOTLY_BASE);
   }
 
   /* ── Topics small-multiples grid ─────────────────────── */
-
   function renderTopicsGrid() {
     if (!DATA || !DATA.states) return;
     const grid = document.getElementById("topics-grid");
+    if (!grid) return;
     grid.innerHTML = TOPICS.map((t, i) =>
       `<div class="topic-card">
         <div class="tc-title">${t.label}</div>
-        <div class="tc-sub">State-mean across crawled private schools</div>
+        <div class="tc-sub">State-mean across crawled schools</div>
         <div class="tc-map" id="tc-map-${i}"></div>
       </div>`).join("");
-
     TOPICS.forEach((t, i) => {
       const rows = DATA.states.filter((s) => s[t.key] != null);
       Plotly.react("tc-map-" + i, [{
-        type: "choropleth",
-        locationmode: "USA-states",
+        type: "choropleth", locationmode: "USA-states",
         locations: rows.map((r) => r.state),
         z: rows.map((r) => r[t.key]),
-        colorscale: t.scale,
-        showscale: false,
+        colorscale: t.scale, showscale: false,
         text: rows.map((r) => `${r.state}: ${r[t.key].toFixed(1)}`),
         hovertemplate: "%{text}<extra></extra>",
       }], {
         geo: { scope: "usa", projection: { type: "albers usa" }, showlakes: false, bgcolor: "rgba(0,0,0,0)" },
         margin: { l: 0, r: 0, t: 0, b: 0 },
-        paper_bgcolor: "rgba(0,0,0,0)",
-        plot_bgcolor: "rgba(0,0,0,0)",
+        paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
       }, PLOTLY_BASE);
     });
   }
 
-  /* ── School-dots data loader ─────────────────────────── */
-  function loadDots() {
-    const note = document.getElementById("schools-count-note");
-    if (note) note.textContent = "Loading 116k schools…";
-    return fetch(DOTS_URL)
+  /* ── Lazy school-search index loader ──────────────────── */
+  function ensureSearchIndex() {
+    if (SEARCH) return Promise.resolve(SEARCH);
+    if (searchLoadingPromise) return searchLoadingPromise;
+    const inp = document.getElementById("school-search");
+    if (inp) inp.placeholder = "Loading school index (~1 MB gz)…";
+    searchLoadingPromise = fetch(SEARCH_URL)
       .then((r) => r.json())
       .then((d) => {
-        DOTS = d;
-        if (note) note.textContent = d.n.toLocaleString() + " schools";
+        SEARCH = d;
+        if (inp) inp.placeholder = `Search ${d.n.toLocaleString()} schools by name…`;
+        return d;
       })
       .catch((err) => {
-        if (note) note.textContent = "Failed to load school-level data";
-        console.error(err);
+        console.error("search index load failed", err);
+        if (inp) inp.placeholder = "Search index unavailable";
+        searchLoadingPromise = null;
+        throw err;
       });
-  }
-
-  /* Filter DOTS by activeSector and return indices */
-  function dotsFilteredIndices() {
-    if (!DOTS) return [];
-    const sectorMap = { private: 0, public: 1, charter: 2 };
-    const want = sectorMap[activeSector];
-    const out = [];
-    const arr = DOTS.schools;
-    for (let i = 0; i < arr.length; i++) {
-      if (activeSector === "all" || arr[i][2] === want) out.push(i);
-    }
-    return out;
-  }
-
-  /* ── Schools panel: WebGL scattergeo ─────────────────── */
-  function renderSchoolsPanel() {
-    if (!DOTS) return;
-    const t = activeTopic;
-    const topicIdx = DOTS.topics.indexOf(t.key);
-    if (topicIdx < 0) return;
-    const colCol = 4 + topicIdx; // [lat,lon,sec,state,t0..t5,crawled]
-    const idxs = dotsFilteredIndices();
-    const arr = DOTS.schools;
-    const lat = new Array(idxs.length);
-    const lon = new Array(idxs.length);
-    const z   = new Array(idxs.length);
-    const txt = new Array(idxs.length);
-    for (let k = 0; k < idxs.length; k++) {
-      const r = arr[idxs[k]];
-      lat[k] = r[0] / 10000;
-      lon[k] = r[1] / 10000;
-      let val = r[colCol];
-      if (activeScale === "quintile") {
-        // map 0-1000 → quintile bin 0..4 → 0,250,500,750,1000
-        val = Math.min(4, Math.floor(val / 200)) * 250;
-      }
-      z[k] = val;
-      txt[k] = DOTS.names[idxs[k]] + "<br>" + DOTS.states[r[3]];
-    }
-    document.getElementById("schools-map-title").textContent =
-      t.label + " — school-level (" + idxs.length.toLocaleString() + " schools)";
-
-    Plotly.react("schools-map", [{
-      type: "scattergeo",
-      mode: "markers",
-      lat: lat,
-      lon: lon,
-      text: txt,
-      hovertemplate: "%{text}<extra></extra>",
-      marker: {
-        size: 3,
-        opacity: 0.55,
-        color: z,
-        colorscale: t.scale,
-        cmin: 0, cmax: 1000,
-        colorbar: { title: { text: "Intensity", font: { size: 11 } }, thickness: 12, len: 0.6 },
-        line: { width: 0 },
-      },
-    }], {
-      geo: {
-        scope: "usa",
-        projection: { type: "albers usa" },
-        showlakes: false,
-        showsubunits: true,
-        subunitcolor: "#cbd5e1",
-        bgcolor: "rgba(0,0,0,0)",
-      },
-      margin: { l: 0, r: 0, t: 0, b: 0 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
-    }, PLOTLY_BASE);
-
-    // Click → open school profile
-    const mapEl = document.getElementById("schools-map");
-    mapEl.removeAllListeners && mapEl.removeAllListeners("plotly_click");
-    mapEl.on("plotly_click", (e) => {
-      if (e && e.points && e.points[0]) {
-        const localIdx = e.points[0].pointIndex;
-        const globalIdx = idxs[localIdx];
-        openSchoolProfile(globalIdx);
-      }
-    });
+    return searchLoadingPromise;
   }
 
   /* ── School search box ───────────────────────────────── */
   function bindSearchBox() {
     const inp = document.getElementById("school-search");
     const res = document.getElementById("school-search-results");
-    if (!inp) return;
+    if (!inp || !res) return;
     let timer;
     inp.addEventListener("input", () => {
       clearTimeout(timer);
-      timer = setTimeout(() => doSearch(inp.value.trim()), 120);
+      const q = inp.value.trim();
+      if (q.length < 2) { res.classList.remove("open"); return; }
+      timer = setTimeout(() => {
+        ensureSearchIndex().then(() => doSearch(q)).catch(() => {});
+      }, 150);
     });
-    inp.addEventListener("focus", () => { if (inp.value.trim()) doSearch(inp.value.trim()); });
     document.addEventListener("click", (e) => {
       if (!res.contains(e.target) && e.target !== inp) res.classList.remove("open");
     });
 
     function doSearch(q) {
-      if (!DOTS || q.length < 2) { res.classList.remove("open"); return; }
+      if (!SEARCH) return;
       const lq = q.toLowerCase();
       const hits = [];
-      const names = DOTS.names;
-      const arr = DOTS.schools;
-      for (let i = 0; i < names.length && hits.length < 12; i++) {
-        if (names[i].toLowerCase().indexOf(lq) >= 0) {
-          hits.push(i);
-        }
+      const arr = SEARCH.schools;
+      for (let i = 0; i < arr.length && hits.length < 12; i++) {
+        if (arr[i][0].toLowerCase().indexOf(lq) >= 0) hits.push(i);
       }
-      if (!hits.length) { res.innerHTML = '<div class="sr-item" style="color:#94a3b8">No match</div>'; res.classList.add("open"); return; }
+      if (!hits.length) {
+        res.innerHTML = '<div class="sr-item" style="color:#94a3b8">No match</div>';
+        res.classList.add("open");
+        return;
+      }
       res.innerHTML = hits.map((i) => {
         const r = arr[i];
-        const sec = DOTS.sectors[r[2]];
-        return `<div class="sr-item" data-i="${i}"><strong>${escapeHtml(names[i])}</strong> <span style="color:#94a3b8">· ${DOTS.states[r[3]]} · ${sec}</span></div>`;
+        const st = SEARCH.states[r[1]];
+        const sec = SEARCH.sectors[r[2]];
+        return `<div class="sr-item" data-i="${i}"><strong>${escapeHtml(r[0])}</strong> <span style="color:#94a3b8">· ${st} · ${sec}</span></div>`;
       }).join("");
       res.classList.add("open");
       res.querySelectorAll(".sr-item").forEach((el) => {
@@ -544,6 +445,7 @@
           const i = parseInt(el.dataset.i, 10);
           openSchoolProfile(i);
           res.classList.remove("open");
+          inp.value = arr[i][0];
         });
       });
     }
@@ -555,66 +457,57 @@
 
   /* School profile card */
   function openSchoolProfile(i) {
-    if (!DOTS) return;
-    const r = DOTS.schools[i];
-    const name = DOTS.names[i] || "(no name)";
-    const sec  = DOTS.sectors[r[2]];
-    const st   = DOTS.states[r[3]];
+    if (!SEARCH) return;
+    const r = SEARCH.schools[i];
+    const name = r[0];
+    const st   = SEARCH.states[r[1]];
+    const sec  = SEARCH.sectors[r[2]];
     document.getElementById("spc-name").textContent = name;
-    document.getElementById("spc-meta").textContent =
-      `${sec} · ${st} · ${r[10] ? "crawled" : "not crawled"}`;
+    document.getElementById("spc-meta").textContent = `${sec} · ${st}`;
 
-    // Compute sector means for comparison
-    const sectorMap = { private: 0, public: 1, charter: 2 };
-    const want = sectorMap[sec];
-    const arr = DOTS.schools;
+    // Sector mean for the same sector
+    const arr = SEARCH.schools;
     const sums = [0,0,0,0,0,0];
     let nsec = 0;
     for (let k = 0; k < arr.length; k++) {
-      if (arr[k][2] === want) {
-        for (let j = 0; j < 6; j++) sums[j] += arr[k][4+j];
+      if (arr[k][2] === r[2]) {
+        for (let j = 0; j < 6; j++) sums[j] += arr[k][3+j];
         nsec++;
       }
     }
     const means = sums.map((s) => s / Math.max(1, nsec));
-    const vals  = [r[4], r[5], r[6], r[7], r[8], r[9]];
+    const vals  = [r[3], r[4], r[5], r[6], r[7], r[8]];
 
     Plotly.react("spc-chart", [
       { type: "bar", orientation: "h",
-        x: vals,
-        y: DOTS.topic_labels,
+        x: vals, y: SEARCH.topic_labels,
         name: "This school",
         marker: { color: "#7c3aed" },
-        hovertemplate: "%{y}: %{x}<extra>This school</extra>",
-      },
+        hovertemplate: "%{y}: %{x}<extra>This school</extra>" },
       { type: "bar", orientation: "h",
-        x: means,
-        y: DOTS.topic_labels,
+        x: means, y: SEARCH.topic_labels,
         name: sec + " mean",
         marker: { color: "#cbd5e1" },
-        hovertemplate: "%{y}: %{x:.0f}<extra>" + sec + " mean</extra>",
-      },
+        hovertemplate: "%{y}: %{x:.0f}<extra>" + sec + " mean</extra>" },
     ], {
       barmode: "group",
-      margin: { l: 140, r: 16, t: 12, b: 28 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
+      margin: { l: 150, r: 16, t: 12, b: 32 },
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
       font: { size: 11 },
-      legend: { orientation: "h", y: 1.12, x: 0 },
-      xaxis: { title: { text: "Intensity (0–1000)", font: { size: 10 } } },
+      legend: { orientation: "h", y: 1.18, x: 0 },
+      xaxis: { title: { text: "Intensity (0–1000, percentile-scaled)", font: { size: 10 } } },
     }, PLOTLY_BASE);
 
     const card = document.getElementById("school-profile-card");
-    card.classList.add("open");
-    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (card) { card.classList.add("open"); card.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
   }
   function bindSchoolProfileClose() {
     const btn = document.getElementById("spc-close");
     if (btn) btn.addEventListener("click", () => document.getElementById("school-profile-card").classList.remove("open"));
+    bindStateProfileClose();
   }
 
-  /* ── Compare panel: bivariate state map ──────────────── */
-  // 3x3 bivariate palette (low-X / low-Y top-left, high-X / high-Y bottom-right)
+  /* ── Compare panel (bivariate) ───────────────────────── */
   const BIVARIATE_PAL = [
     "#e8e8e8", "#b5d3e7", "#6c83b5",
     "#e4acac", "#ad9eaf", "#574249",
@@ -656,30 +549,27 @@
     if (!DATA || !DATA.states) return;
     const xKey = document.getElementById("bv-x").value;
     const yKey = document.getElementById("bv-y").value;
-    const xLab = TOPICS.find((t) => t.key === xKey).label;
-    const yLab = TOPICS.find((t) => t.key === yKey).label;
+    const xLab = (TOPICS.find((t) => t.key === xKey) || {}).label || xKey;
+    const yLab = (TOPICS.find((t) => t.key === yKey) || {}).label || yKey;
     const rows = DATA.states.filter((s) => s[xKey] != null && s[yKey] != null);
     const xv = rows.map((r) => r[xKey]);
     const yv = rows.map((r) => r[yKey]);
     const colors = rows.map((r) => {
       const ix = tertile(xv, r[xKey]);
       const iy = tertile(yv, r[yKey]);
-      return BIVARIATE_PAL[(2 - iy) * 3 + ix]; // y low at bottom
+      return BIVARIATE_PAL[(2 - iy) * 3 + ix];
     });
     const text = rows.map((r) =>
       `${r.state}<br>${xLab}: ${r[xKey].toFixed(1)}<br>${yLab}: ${r[yKey].toFixed(1)}`);
 
     document.getElementById("bv-map-title").textContent = `${xLab} × ${yLab}`;
 
-    // Plotly choropleth supports per-state colors via colorscale-trick: use z = numeric index, custom colorscale
-    // Simpler: use one trace per palette bin
     const traces = [];
     for (let bi = 0; bi < 9; bi++) {
       const idxs = colors.map((c, i) => (c === BIVARIATE_PAL[bi] ? i : -1)).filter((i) => i >= 0);
       if (!idxs.length) continue;
       traces.push({
-        type: "choropleth",
-        locationmode: "USA-states",
+        type: "choropleth", locationmode: "USA-states",
         locations: idxs.map((i) => rows[i].state),
         z: idxs.map(() => bi),
         zmin: 0, zmax: 8,
@@ -692,70 +582,64 @@
     Plotly.react("bv-map", traces, {
       geo: { scope: "usa", projection: { type: "albers usa" }, showlakes: false, bgcolor: "rgba(0,0,0,0)" },
       margin: { l: 0, r: 0, t: 0, b: 0 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
     }, PLOTLY_BASE);
   }
 
-  /* ── Correlations heatmap ────────────────────────────── */
+  /* ── Correlations panel ──────────────────────────────── */
   function renderCorrelationsPanel() {
-    if (!DOTS) return;
-    const idxs = dotsFilteredIndices();
-    const arr = DOTS.schools;
-    const ntopics = DOTS.topics.length;
-    // Build per-topic value arrays
-    const cols = [];
-    for (let j = 0; j < ntopics; j++) cols.push(new Array(idxs.length));
-    for (let k = 0; k < idxs.length; k++) {
-      const r = arr[idxs[k]];
-      for (let j = 0; j < ntopics; j++) cols[j][k] = r[4 + j];
+    if (!SEARCH) return;
+    const arr = SEARCH.schools;
+    const sectorMap = { private: 0, public: 1, charter: 2 };
+    const want = sectorMap[activeSector];
+    // Build per-topic column arrays (filter by sector if needed)
+    const ntopics = SEARCH.topics.length;
+    const cols = []; for (let j = 0; j < ntopics; j++) cols.push([]);
+    for (let k = 0; k < arr.length; k++) {
+      if (activeSector !== "all" && arr[k][2] !== want) continue;
+      for (let j = 0; j < ntopics; j++) cols[j].push(arr[k][3+j]);
     }
+    if (!cols[0].length) return;
     const corr = pearsonMatrix(cols);
-    const z = corr;
-    const labs = DOTS.topic_labels;
+    const labs = SEARCH.topic_labels;
     Plotly.react("corr-heatmap", [{
       type: "heatmap",
-      x: labs, y: labs, z: z,
+      x: labs, y: labs, z: corr,
       zmin: -1, zmax: 1,
-      colorscale: "RdBu",
-      reversescale: true,
+      colorscale: "RdBu", reversescale: true,
       colorbar: { title: { text: "r", font: { size: 11 } }, thickness: 12, len: 0.7 },
       hovertemplate: "%{y} vs %{x}<br>r = %{z:.2f}<extra></extra>",
     }], {
       margin: { l: 150, r: 30, t: 30, b: 120 },
-      paper_bgcolor: "rgba(0,0,0,0)",
-      plot_bgcolor: "rgba(0,0,0,0)",
+      paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
       xaxis: { tickangle: 30, tickfont: { size: 11 } },
       yaxis: { autorange: "reversed", tickfont: { size: 11 } },
-      annotations: cellLabels(z, labs),
+      annotations: cellLabels(corr, labs),
     }, PLOTLY_BASE);
   }
   function cellLabels(z, labs) {
     const a = [];
     for (let i = 0; i < z.length; i++) {
       for (let j = 0; j < z[i].length; j++) {
-        a.push({
-          x: labs[j], y: labs[i],
-          text: z[i][j].toFixed(2),
-          showarrow: false,
-          font: { size: 10, color: Math.abs(z[i][j]) > 0.6 ? "#fff" : "#1e293b" },
-        });
+        a.push({ x: labs[j], y: labs[i], text: z[i][j].toFixed(2), showarrow: false,
+                 font: { size: 10, color: Math.abs(z[i][j]) > 0.6 ? "#fff" : "#1e293b" } });
       }
     }
     return a;
   }
   function pearsonMatrix(cols) {
     const k = cols.length;
-    const means = cols.map((c) => c.reduce((s,x)=>s+x,0)/c.length);
-    const sds   = cols.map((c, j) => Math.sqrt(c.reduce((s,x)=>s+(x-means[j])**2,0)/c.length) || 1);
+    const n = cols[0].length;
+    const means = cols.map((c) => c.reduce((s,x)=>s+x,0)/n);
+    const sds   = cols.map((c, j) => Math.sqrt(c.reduce((s,x)=>s+(x-means[j])**2,0)/n) || 1);
     const m = [];
     for (let i = 0; i < k; i++) {
       const row = [];
       for (let j = 0; j < k; j++) {
         if (i === j) { row.push(1); continue; }
         let s = 0;
-        for (let n = 0; n < cols[i].length; n++) s += (cols[i][n]-means[i]) * (cols[j][n]-means[j]);
-        row.push(s / (cols[i].length * sds[i] * sds[j]));
+        for (let q = 0; q < n; q++) s += (cols[i][q]-means[i]) * (cols[j][q]-means[j]);
+        row.push(s / (n * sds[i] * sds[j]));
       }
       m.push(row);
     }
