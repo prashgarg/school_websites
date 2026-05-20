@@ -248,6 +248,130 @@
     .cov-item .cv-lab { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-top: 4px; }
 
     .help-text { font-size: 0.78rem; color: var(--text-light); margin-top: 1rem; max-width: 760px; line-height: 1.65; }
+
+    /* ── Global controls (sector toggle + scale toggle) ──── */
+    .global-controls {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 0.75rem 0.875rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .control-group { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .control-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .sector-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .seg-btn {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      background: var(--bg);
+      color: var(--text-muted);
+      border: none;
+      border-right: 1px solid var(--border);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+    .seg-btn:last-child { border-right: none; }
+    .seg-btn:hover { color: var(--text); }
+    .seg-btn.active { background: var(--text); color: var(--bg); }
+    .sector-note { font-size: 0.72rem; color: var(--text-light); margin-left: 0.5rem; }
+
+    /* ── Schools panel ───────────────────────────────────── */
+    .schools-toolbar {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 240px; max-width: 380px; }
+    .search-wrap input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.88rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+      z-index: 50;
+      margin-top: 4px;
+      display: none;
+    }
+    .search-results.open { display: block; }
+    .search-results .sr-item {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+    }
+    .search-results .sr-item:last-child { border-bottom: none; }
+    .search-results .sr-item:hover { background: var(--bg-secondary); }
+    .school-profile-card {
+      margin-top: 1.25rem;
+      padding: 1rem 1.25rem;
+      border: 1px solid var(--primary-light);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      display: none;
+    }
+    .school-profile-card.open { display: block; }
+    .spc-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .spc-head h4 { font-size: 1rem; font-weight: 600; }
+    .spc-meta { font-size: 0.78rem; color: var(--text-muted); }
+    .spc-close { font-size: 0.75rem; color: var(--text-muted); background: none; border: 1px solid var(--border); padding: 0.25rem 0.6rem; border-radius: 6px; cursor: pointer; }
+    .spc-chart { height: 220px; }
+
+    /* ── Compare panel (bivariate) ───────────────────────── */
+    .bivariate-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+    .bivariate-row .group {
+      display: flex; gap: 0.4rem; align-items: center;
+      padding: 0.4rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg-card);
+    }
+    .bivariate-row select {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 0.15rem 0.3rem;
+    }
+    .bivariate-row .group label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+    .bivariate-legend {
+      display: grid;
+      grid-template-columns: repeat(3, 18px);
+      grid-template-rows: repeat(3, 18px);
+      gap: 1px;
+      width: max-content;
+      margin-top: 0.5rem;
+    }
+    .bivariate-legend > div { border-radius: 2px; }
+    .bivariate-legend-wrap { display: flex; gap: 1rem; align-items: center; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+
+    /* ── Correlations panel ──────────────────────────────── */
+    #corr-heatmap { height: 540px; }
   </style>
 </head>
 <body>
@@ -271,12 +395,34 @@
 
   <div class="atlas-header">
     <h1>Atlas</h1>
-    <p>U.S.&nbsp;K&ndash;12 school-website content across topics, states, and counties.
-    Switch the unit of analysis with the tabs below; pick a topic to set what the
-    map and ranking show.</p>
+    <p>U.S.&nbsp;K&ndash;12 school-website content at four scales: national,
+    state, county, and individual school. Pick a unit of analysis, choose a
+    topic, optionally filter by sector. The Compare and Correlations tabs add
+    bivariate and multi-topic views.</p>
   </div>
 
-  <!-- Topic chooser (applies to map, ranking, county view) -->
+  <!-- Global controls: sector toggle + topic chooser -->
+  <div class="global-controls">
+    <div class="control-group">
+      <span class="control-label">Sector</span>
+      <div class="sector-toggle" id="sector-toggle">
+        <button class="seg-btn active" data-sector="all">All</button>
+        <button class="seg-btn" data-sector="private">Private</button>
+        <button class="seg-btn" data-sector="public">Public</button>
+        <button class="seg-btn" data-sector="charter">Charter</button>
+      </div>
+      <span class="sector-note" id="sector-note"></span>
+    </div>
+    <div class="control-group" id="scale-group">
+      <span class="control-label">Color scale</span>
+      <div class="sector-toggle">
+        <button class="seg-btn active" data-scale="continuous">Continuous</button>
+        <button class="seg-btn" data-scale="quintile">Quintile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Topic chooser (single-select; Compare panel uses its own dual selector) -->
   <div class="topic-row" id="topic-row">
     <!-- populated by atlas.js -->
   </div>
@@ -284,9 +430,12 @@
   <!-- Unit-of-analysis tabs -->
   <div class="unit-tabs" id="unit-tabs">
     <button class="unit-tab active" data-unit="national">National</button>
+    <button class="unit-tab" data-unit="schools">Schools</button>
     <button class="unit-tab" data-unit="states">States</button>
     <button class="unit-tab" data-unit="counties">Counties</button>
     <button class="unit-tab" data-unit="topics">Topics</button>
+    <button class="unit-tab" data-unit="compare">Compare</button>
+    <button class="unit-tab" data-unit="correlations">Correlations</button>
   </div>
 
   <!-- ── National panel ──────────────────────────────── -->
@@ -339,6 +488,40 @@
         </tbody>
       </table>
     </div>
+  </div>
+
+  <!-- ── Schools panel (school-level WebGL scattergeo) ── -->
+  <div class="unit-panel" id="panel-schools">
+    <div class="schools-toolbar">
+      <div class="search-wrap">
+        <input type="text" id="school-search" placeholder="Search a school by name&hellip;" autocomplete="off" />
+        <div class="search-results" id="school-search-results"></div>
+      </div>
+      <span class="meta-note" id="schools-count-note">Loading school-level data&hellip;</span>
+    </div>
+    <div class="map-card">
+      <div class="map-meta">
+        <h3 id="schools-map-title">Topic intensity by school</h3>
+        <span class="meta-note">Each dot = one school. Color = topic intensity (log-scaled, percentile). Hover for name.</span>
+      </div>
+      <div id="schools-map" class="map-container" style="height: 520px;"></div>
+    </div>
+    <div class="school-profile-card" id="school-profile-card">
+      <div class="spc-head">
+        <div>
+          <h4 id="spc-name">&mdash;</h4>
+          <div class="spc-meta" id="spc-meta">&mdash;</div>
+        </div>
+        <button class="spc-close" id="spc-close">Close</button>
+      </div>
+      <div class="spc-chart" id="spc-chart"></div>
+    </div>
+    <p class="help-text">
+      School-level layer: 116,862 schools placed by latitude/longitude (PSS for
+      private, NCES EDGE for public). Topic intensity is a per-school
+      log-scaled, top-percentile-normalized score. Sector filter applies. School
+      search matches substrings in the full national universe.
+    </p>
   </div>
 
   <!-- ── States panel ───────────────────────────────── -->
@@ -396,6 +579,55 @@
       PSS private-school sample. Counties with fewer than three crawled private
       schools are omitted to keep the map readable at the county level.
       State-level maps in the States tab cover all 50 states plus DC.
+    </p>
+  </div>
+
+  <!-- ── Compare panel (bivariate map) ──────────────── -->
+  <div class="unit-panel" id="panel-compare">
+    <div class="bivariate-row">
+      <div class="group">
+        <label>X</label>
+        <select id="bv-x"></select>
+      </div>
+      <div class="group">
+        <label>Y</label>
+        <select id="bv-y"></select>
+      </div>
+      <div class="bivariate-legend-wrap">
+        <span>low&minus;low</span>
+        <div class="bivariate-legend" id="bv-legend"></div>
+        <span>high&minus;high</span>
+      </div>
+    </div>
+    <div class="map-card">
+      <div class="map-meta">
+        <h3 id="bv-map-title">Two-topic state comparison</h3>
+        <span class="meta-note">Each state colored by joint tertile of X and Y</span>
+      </div>
+      <div id="bv-map" class="map-container" style="height: 520px;"></div>
+    </div>
+    <p class="help-text">
+      Bivariate state map: each state is binned into low/mid/high tertiles on
+      the two selected topics. The 3&times;3 color palette reveals where the
+      two topics co-occur (purple = both high) vs.\ where they diverge
+      (red/blue corners). State-level aggregates from the private-school sample.
+    </p>
+  </div>
+
+  <!-- ── Correlations panel (topic-topic heatmap) ─────── -->
+  <div class="unit-panel" id="panel-correlations">
+    <div class="map-card">
+      <div class="map-meta">
+        <h3>Topic correlation matrix</h3>
+        <span class="meta-note">Pearson correlation across crawled schools (log-scaled scores)</span>
+      </div>
+      <div id="corr-heatmap"></div>
+    </div>
+    <p class="help-text">
+      Across-school correlations of the six focal topic intensities. Positive
+      values (red) mean the two topics tend to co-occur on the same school's
+      website; negative values (blue) mean they trade off. The diagonal is 1 by
+      construction. Sector filter applies.
     </p>
   </div>
 
