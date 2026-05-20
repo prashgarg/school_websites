@@ -109,9 +109,13 @@
       We start from the union of NCES&rsquo;s Common Core of Data
       (CCD,&nbsp;2022&ndash;23) and Private School Survey
       (PSS,&nbsp;2021&ndash;22): 145,569 schools across all 50 states.
-      Active-school URL coverage reaches 93% via an eight-stage discovery
-      pipeline. We crawled 81,109 schools in May 2026 and deduplicated to
-      939,470 unique pages.
+      Of these, 122,415 received a discovered URL and 114,624 returned a
+      live homepage at crawl time. The April&ndash;May 2026 crawl
+      successfully retrieved page text for 81,109 schools, producing
+      1,835,152 unique pages after within-school deduplication (mean 23
+      pages/school). The 33,515-school gap from active-seeded to crawled
+      is dominated by Cloudflare/anti-bot blocks, JavaScript-only sites,
+      and soft-404 stubs beyond the homepage.
     </p>
 
     <h2>Measurement</h2>
@@ -142,10 +146,20 @@
       Enrollment growth: PSS biennial waves 2013&ndash;14 through 2021&ndash;22
       (private, 38,692 school-years) and CCD Membership 2016&ndash;17 through
       2022&ndash;23 (public, 251,792 school-years).
-      Closure: state Department of Education rosters for six states
-      (private, 70 events) and national CCD presence-disappearance over seven
-      waves (public, 320 events in the regression sample, 9,344 in the full
-      panel).
+    </p>
+    <p>
+      Closure (private): state Department of Education enrollment rosters for
+      California, New York, Pennsylvania, Illinois, Ohio, and Wisconsin
+      (1,553 matched schools; 70 closure events). Closure is defined as
+      permanent disappearance from the state roster, persisting in subsequent
+      years. We are extending these panels through 2024&ndash;25 and adding
+      additional states.
+    </p>
+    <p>
+      Closure (public): national CCD presence-disappearance over seven
+      waves 2016&ndash;17 through 2022&ndash;23. 109,204 schools, 9,344
+      closures in the full panel; 320 events in the within-Nonsectarian
+      regression sample.
     </p>
 
     <div class="full-methods-note">
