@@ -159,15 +159,28 @@
       <strong>Closure (private, six states):</strong> ground-truth state
       Department of Education enrollment rosters for California, New
       York, Pennsylvania, Illinois, Ohio, and Wisconsin (1,553 matched
-      schools; 70 closure events). The reason the private panel is
-      six-state rather than national is a hard data constraint, not a
-      design choice: a closed school's website is no longer live by the
-      time we crawl, so to observe website features and closure jointly
-      we need a post-2022 enrollment-status source &mdash; which exists
-      nationally for public schools (annual CCD) but only in these six
-      states for private schools (PSS 2023&ndash;24 is not yet published
-      by NCES, and other state DoE rosters were either anti-bot-blocked
-      or returned zero events).
+      schools; 70 closure events). Uses 2026 website features to predict
+      closure observed in 2023&ndash;24 / 2024&ndash;25 rosters.
+    </p>
+    <p>
+      <strong>Closure (private, national robustness):</strong>
+      complementary design using earlier features: 2017&ndash;18 Wayback
+      Machine homepage features for 1,314 private schools in PSS
+      2017&ndash;18, predicting closure observed as disappearance from
+      PSS 2021&ndash;22. National coverage (50 states), 26 closure
+      events; financial-aid-mention coefficient replicates the
+      six-state-panel sign.
+    </p>
+    <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
+      Why two private-side designs? A closed school has no website to
+      crawl, so to observe website features and closure jointly we need
+      either (a) a post-crawl enrollment-status source (the six states
+      above) or (b) pre-crawl features for an earlier closure window
+      (the Wayback 2018 + PSS 2022 design). The CCD provides this
+      annually for the public sector, which is why the public panel
+      reaches 9,344 events nationally. PSS 2023&ndash;24, when released
+      by NCES, will allow a third design using 2026 features at national
+      scale.
     </p>
 
     <div class="full-methods-note">
