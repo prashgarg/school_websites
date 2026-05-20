@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atlas &mdash; School Websites Project</title>
+  <meta name="description" content="Interactive atlas: U.S. K-12 school-website content measured across topics, states, and counties." />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="js/main.js" defer></script>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
+  <style>
+    /* ── Atlas-specific layout ─────────────────────────────── */
+    .atlas-header {
+      padding: 2.5rem 0 1.5rem;
+    }
+    .atlas-header h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 1.7rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+    .atlas-header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      max-width: 620px;
+    }
+
+    /* Unit-of-analysis tabs */
+    .unit-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .unit-tab {
+      padding: 0.875rem 1.5rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .unit-tab:hover { color: var(--text); }
+    .unit-tab.active {
+      color: var(--text);
+      border-bottom-color: var(--primary-light);
+    }
+
+    /* Topic chooser */
+    .topic-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .topic-chip {
+      padding: 0.4rem 0.875rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .topic-chip:hover { border-color: var(--primary-light); color: var(--text); }
+    .topic-chip.active {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+    }
+
+    /* Panels */
+    .unit-panel { display: none; }
+    .unit-panel.active { display: block; }
+
+    /* ── National panel ──────────────────────────────────── */
+    .nat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .nat-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      background: var(--bg-card);
+    }
+    .nat-card .nat-num {
+      font-family: var(--font-serif);
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .nat-card .nat-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+      line-height: 1.4;
+    }
+
+    /* Sector breakdown bars */
+    .sector-bar-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .sector-bar-row:last-child { border-bottom: none; }
+    .sector-bar-row .lbl { font-size: 0.85rem; }
+    .sector-bar-row .bar-wrap {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .sector-bar-row .bar {
+      flex: 1;
+      height: 14px;
+      background: var(--bg-secondary);
+      border-radius: 100px;
+      position: relative;
+      overflow: hidden;
+    }
+    .sector-bar-row .bar-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: var(--primary-light);
+      border-radius: 100px;
+    }
+    .sector-bar-row .bar-fill.priv  { background: #7c3aed; }
+    .sector-bar-row .bar-fill.pub   { background: #1d4ed8; }
+    .sector-bar-row .bar-fill.chart { background: #b45309; }
+    .sector-bar-row .val { font-size: 0.78rem; color: var(--text-muted); width: 60px; text-align: right; }
+
+    .legend-row {
+      display: flex; gap: 1.25rem; margin-top: 0.5rem;
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+    .legend-dot {
+      display: inline-block; width: 10px; height: 10px;
+      border-radius: 100px; margin-right: 0.35rem; vertical-align: middle;
+    }
+
+    /* ── Map ──────────────────────────────────────────── */
+    .map-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      background: var(--bg-card);
+    }
+    .map-container { width: 100%; height: 440px; }
+    .map-meta {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .map-meta h3 { font-size: 0.95rem; font-weight: 600; }
+    .map-meta .meta-note { font-size: 0.75rem; color: var(--text-light); }
+
+    /* Ranking table */
+    .rank-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .rank-table th, .rank-table td {
+      padding: 0.45rem 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .rank-table th {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+      color: var(--text-muted); font-weight: 600;
+      position: sticky; top: 0; background: var(--bg);
+    }
+    .rank-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .rank-table tr:hover { background: var(--bg-secondary); }
+    .rank-table tr.clickable { cursor: pointer; }
+
+    .grid-two {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 800px) { .grid-two { grid-template-columns: 1fr; } }
+    .table-wrap { max-height: 440px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+
+    /* Topics small multiples */
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1rem;
+    }
+    .topic-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      background: var(--bg-card);
+    }
+    .topic-card .tc-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.35rem; }
+    .topic-card .tc-sub { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .topic-card .tc-map { height: 220px; }
+
+    /* State profile (click into a state) */
+    .state-profile {
+      margin-top: 1.25rem;
+      border-top: 2px solid var(--primary-light);
+      padding-top: 1.25rem;
+      display: none;
+    }
+    .state-profile.open { display: block; }
+    .state-profile-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 0.75rem;
+    }
+    .state-profile-header h3 { font-size: 1.05rem; font-weight: 600; }
+    .state-profile-header button {
+      font-size: 0.78rem; color: var(--text-muted);
+      background: none; border: 1px solid var(--border);
+      padding: 0.3rem 0.7rem; border-radius: 6px; cursor: pointer;
+    }
+    .state-profile-chart { height: 240px; }
+
+    /* Coverage strip */
+    .cov-strip {
+      display: flex; gap: 0; flex-wrap: wrap;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+    }
+    .cov-item {
+      padding: 0.875rem 1.25rem;
+      flex: 1;
+      min-width: 110px;
+      border-right: 1px solid var(--border);
+    }
+    .cov-item:last-child { border-right: none; }
+    .cov-item .cv-num { font-size: 1rem; font-weight: 700; line-height: 1; }
+    .cov-item .cv-lab { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-top: 4px; }
+
+    .help-text { font-size: 0.78rem; color: var(--text-light); margin-top: 1rem; max-width: 760px; line-height: 1.65; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand">
+      <a href="index.html">School Websites Project</a>
+    </div>
+    <div class="nav-links">
+      <a href="atlas.html" class="active">Atlas</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <button id="theme-toggle" title="Toggle theme">&#x263E;</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="atlas-header">
+    <h1>Atlas</h1>
+    <p>U.S.&nbsp;K&ndash;12 school-website content across topics, states, and counties.
+    Switch the unit of analysis with the tabs below; pick a topic to set what the
+    map and ranking show.</p>
+  </div>
+
+  <!-- Topic chooser (applies to map, ranking, county view) -->
+  <div class="topic-row" id="topic-row">
+    <!-- populated by atlas.js -->
+  </div>
+
+  <!-- Unit-of-analysis tabs -->
+  <div class="unit-tabs" id="unit-tabs">
+    <button class="unit-tab active" data-unit="national">National</button>
+    <button class="unit-tab" data-unit="states">States</button>
+    <button class="unit-tab" data-unit="counties">Counties</button>
+    <button class="unit-tab" data-unit="topics">Topics</button>
+  </div>
+
+  <!-- ── National panel ──────────────────────────────── -->
+  <div class="unit-panel active" id="panel-national">
+    <div class="cov-strip">
+      <div class="cov-item"><div class="cv-num" id="cv-total">&mdash;</div><div class="cv-lab">Schools in universe</div></div>
+      <div class="cov-item"><div class="cv-num" id="cv-crawled">&mdash;</div><div class="cv-lab">Crawled</div></div>
+      <div class="cov-item"><div class="cv-num" id="cv-private">&mdash;</div><div class="cv-lab">Private</div></div>
+      <div class="cov-item"><div class="cv-num" id="cv-public">&mdash;</div><div class="cv-lab">Public</div></div>
+      <div class="cov-item"><div class="cv-num" id="cv-states">&mdash;</div><div class="cv-lab">States</div></div>
+      <div class="cov-item"><div class="cv-num" id="cv-counties">&mdash;</div><div class="cv-lab">Counties</div></div>
+    </div>
+
+    <div class="map-card" style="margin-bottom: 1.5rem;">
+      <div class="map-meta">
+        <h3 id="nat-bd-title">Topic prevalence by sector</h3>
+        <span class="meta-note">% of crawled schools with any keyword match</span>
+      </div>
+      <div id="nat-sector-bars"></div>
+      <div class="legend-row">
+        <span><span class="legend-dot" style="background:#7c3aed"></span>Private</span>
+        <span><span class="legend-dot" style="background:#1d4ed8"></span>Public traditional</span>
+        <span><span class="legend-dot" style="background:#b45309"></span>Charter</span>
+      </div>
+    </div>
+
+    <div class="map-card">
+      <div class="map-meta">
+        <h3>Headline coefficients</h3>
+        <span class="meta-note">Joint regression, school-clustered SEs</span>
+      </div>
+      <table class="rank-table">
+        <thead>
+          <tr>
+            <th>Outcome</th>
+            <th>Predictor</th>
+            <th class="num">Coef</th>
+            <th class="num">p</th>
+            <th>Sample</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Private enrollment growth (annual)</td><td>Financial-aid mention</td><td class="num">+0.0177</td><td class="num">&lt;0.001</td><td>38,692 school-years</td></tr>
+          <tr><td>Private enrollment growth (annual)</td><td>Tuition-transparency kw density</td><td class="num">+0.0056</td><td class="num">&lt;0.001</td><td>38,692 school-years</td></tr>
+          <tr><td>Private enrollment growth (annual)</td><td>Academic-rigor kw density</td><td class="num">+0.0048</td><td class="num">&lt;0.001</td><td>38,692 school-years</td></tr>
+          <tr><td>Public enrollment growth (annual)</td><td>Academic-rigor kw density</td><td class="num">&minus;0.0013</td><td class="num">&lt;0.001</td><td>251,792 school-years</td></tr>
+          <tr><td>Private closure (6-state panel)</td><td>Academic-rigor kw density</td><td class="num">OR&nbsp;=&nbsp;0.66</td><td class="num">0.09</td><td>1,553 schools / 70 events</td></tr>
+          <tr><td>Private closure</td><td>Financial-aid mention</td><td class="num">OR&nbsp;=&nbsp;0.59</td><td class="num">0.10</td><td>1,553 schools / 70 events</td></tr>
+          <tr><td>Public closure (national, 7-wave CCD)</td><td>Religious-identity kw density</td><td class="num">OR&nbsp;=&nbsp;0.38</td><td class="num">0.005</td><td>66,611 schools / 320 events</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── States panel ───────────────────────────────── -->
+  <div class="unit-panel" id="panel-states">
+    <div class="map-card" style="margin-bottom: 1.5rem;">
+      <div class="map-meta">
+        <h3 id="state-map-title">Loading&hellip;</h3>
+        <span class="meta-note">Hover state for value &middot; click for full profile</span>
+      </div>
+      <div id="state-map" class="map-container"></div>
+    </div>
+
+    <div class="grid-two">
+      <div class="map-card">
+        <div class="map-meta">
+          <h3>State ranking</h3>
+          <span class="meta-note">Click row to profile</span>
+        </div>
+        <div class="table-wrap">
+          <table class="rank-table" id="state-table">
+            <thead><tr><th>#</th><th>State</th><th class="num">Score</th><th class="num">N priv</th></tr></thead>
+            <tbody id="state-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="map-card">
+        <div class="map-meta">
+          <h3>Top &amp; bottom 10</h3>
+          <span class="meta-note">For the selected topic</span>
+        </div>
+        <div id="state-bars" style="height: 440px;"></div>
+      </div>
+    </div>
+
+    <div class="state-profile" id="state-profile">
+      <div class="state-profile-header">
+        <h3 id="state-profile-name">&mdash;</h3>
+        <button onclick="document.getElementById('state-profile').classList.remove('open')">Close</button>
+      </div>
+      <div class="state-profile-chart" id="state-profile-chart"></div>
+    </div>
+  </div>
+
+  <!-- ── Counties panel ─────────────────────────────── -->
+  <div class="unit-panel" id="panel-counties">
+    <div class="map-card">
+      <div class="map-meta">
+        <h3 id="county-map-title">Loading&hellip;</h3>
+        <span class="meta-note">Counties with &ge;3 crawled private schools, top 500 by sample size</span>
+      </div>
+      <div id="county-map" class="map-container"></div>
+    </div>
+    <p class="help-text">
+      The county-level layer covers the 500 highest-coverage counties in the
+      PSS private-school sample. Counties with fewer than three crawled private
+      schools are omitted to keep the map readable at the county level.
+      State-level maps in the States tab cover all 50 states plus DC.
+    </p>
+  </div>
+
+  <!-- ── Topics panel ───────────────────────────────── -->
+  <div class="unit-panel" id="panel-topics">
+    <p class="help-text" style="margin-bottom: 1.25rem;">
+      Six focal topics, one panel each. Maps share the same color scale within
+      each topic but are not comparable across topics &mdash; scores are mean
+      phrase-matches per page and differ in baseline level by topic.
+    </p>
+    <div class="topics-grid" id="topics-grid">
+      <!-- populated by atlas.js -->
+    </div>
+  </div>
+
+  <p class="help-text" style="margin-top: 2rem;">
+    Private-school sample: PSS 2021&ndash;22 universe, crawled May 2026.
+    Topic scores: mean phrase matches per page, averaged across crawled pages per school,
+    then averaged across schools in each geography. The six focal topics shown here are
+    the focal subset of a 22-topic keyword ontology &mdash; see
+    <a href="methods.html">Methods</a> for construction details and the
+    <a href="paper.html">Paper</a> for the joint regression headline numbers.
+  </p>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <span class="footer-copy">School Websites Project. Working paper, 2026.</span>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="atlas.html">Atlas</a>
+      <a href="paper.html">Paper</a>
+      <a href="methods.html">Methods</a>
+      <a href="data.html">Data</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script src="js/atlas.js"></script>
+</body>
+</html>

@@ -3,45 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>School Websites Project — What Private School Websites Reveal</title>
-  <meta name="description" content="A private school that posts its tuition online grows 4 percentage points faster. Large-scale text analysis of 145,569 U.S. school websites." />
+  <title>What Schools Tell Families &mdash; School Websites Project</title>
+  <meta name="description" content="A national measurement of U.S. K-12 school-website content. 81,109 schools, 940,000 pages, deterministic keyword and structural features." />
   <link rel="stylesheet" href="css/style.css" />
-  <script src="js/main.js"></script>
+  <script src="js/main.js" defer></script>
   <style>
-    /* ── Index extras ─────────────────────────────────── */
-    .findings-filter {
-      display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem;
-      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    .home-hero { padding: 7rem 0 6rem; max-width: 760px; }
+    .home-hero h1 {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(2rem, 4.8vw, 3.4rem);
+      line-height: 1.15;
+      letter-spacing: -0.015em;
+      margin-bottom: 1.5rem;
     }
-    .filter-chip {
-      padding: .3rem .875rem; border-radius: 100px;
-      font-size: .78rem; font-weight: 500;
-      border: 1.5px solid var(--border);
-      background: var(--bg-secondary); color: var(--text-muted);
-      cursor: pointer; transition: all var(--transition);
+    .home-hero h1 em { font-style: italic; color: var(--primary-light); }
+    .home-hero p.lead {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+      max-width: 640px;
     }
-    .filter-chip:hover { border-color: var(--primary-light); color: var(--primary-light); }
-    .filter-chip.active { background: var(--primary-light); color: #fff; border-color: var(--primary-light); }
-    .finding-card[data-hidden="true"] { display: none; }
-
-    .topic-card-grid {
-      display: grid; gap: .875rem;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    .scale-row {
+      display: flex;
+      gap: 3rem;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
     }
-    .topic-pill {
-      display: inline-flex; align-items: center; gap: .4rem;
-      padding: .2rem .6rem; border-radius: 100px;
-      font-size: .7rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .07em;
+    .scale-item .scale-num {
+      font-family: var(--font-serif);
+      font-size: 1.55rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      display: block;
     }
-    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: start; }
-    @media (max-width: 640px) { .about-grid { grid-template-columns: 1fr; } }
-    .for-whom-list { list-style: none; }
-    .for-whom-list li { display: flex; align-items: flex-start; gap: .625rem; padding: .5rem 0; border-bottom: 1px solid var(--border); font-size: .875rem; }
-    .for-whom-list li:last-child { border-bottom: none; }
-    .for-whom-list .icon { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
-    .for-whom-list strong { display: block; font-weight: 600; font-size: .85rem; }
-    .for-whom-list p { color: var(--text-muted); font-size: .8rem; line-height: 1.4; margin: 0; }
+    .scale-item .scale-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.2rem;
+    }
+    .home-actions {
+      margin-top: 3rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .home-actions a {
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color var(--transition), color var(--transition);
+    }
+    .home-actions a:hover { border-color: var(--primary-light); color: var(--primary-light); }
+    .home-actions a.primary {
+      background: var(--primary-light);
+      color: #fff;
+      border-color: var(--primary-light);
+    }
+    .home-actions a.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
   </style>
 </head>
 <body>
@@ -49,348 +76,68 @@
 <nav>
   <div class="nav-inner">
     <div class="nav-brand">
-      <div class="brand-icon">SWP</div>
       <a href="index.html">School Websites Project</a>
     </div>
     <div class="nav-links">
-      <a href="index.html" class="active">Home</a>
-      <a href="explorer.html">Explorer</a>
+      <a href="atlas.html">Atlas</a>
       <a href="paper.html">Paper</a>
       <a href="methods.html">Methods</a>
       <a href="data.html">Data</a>
-      <button id="theme-toggle" title="Toggle theme">☾</button>
+      <button id="theme-toggle" title="Toggle theme">&#x263E;</button>
     </div>
   </div>
 </nav>
 
-<!-- ── Hero ─────────────────────────────────────────────────── -->
 <div class="container">
-  <div class="hero">
-    <div class="hero-eyebrow">
-      <span>📊</span> Working paper · 2026
-    </div>
-
-    <h1>A private school that posts its tuition<br>
-    grows <em>4 percentage points faster</em>.</h1>
+  <div class="home-hero">
+    <h1>What U.S. K&ndash;12 schools tell families on their websites, <em>measured at national scale</em>.</h1>
 
     <p class="lead">
-      We crawl and score the websites of 81,109 U.S. schools.
-      What schools signal about religion, academic rigor, and cost transparency
-      on their websites predicts which ones grow — and which ones close.
+      The U.S. K&ndash;12 market enrolls 50 million students with no required disclosure
+      of price or program. We measure 81,109 public, private, and charter
+      school websites &mdash; what they emphasize, how that varies with local market
+      structure, and what it predicts for enrollment growth and school closure.
     </p>
 
-    <div class="hero-stats">
-      <div class="stat-item">
-        <span class="stat-num" data-count="145569">0</span>
-        <span class="stat-label">Schools in universe</span>
+    <div class="scale-row">
+      <div class="scale-item">
+        <span class="scale-num">81,109</span>
+        <span class="scale-label">Schools crawled</span>
       </div>
-      <div class="stat-item">
-        <span class="stat-num" data-count="81109">0</span>
-        <span class="stat-label">Websites crawled</span>
+      <div class="scale-item">
+        <span class="scale-num">939,470</span>
+        <span class="scale-label">Pages analyzed</span>
       </div>
-      <div class="stat-item">
-        <span class="stat-num" data-count="421663">0</span>
-        <span class="stat-label">Pages analyzed</span>
+      <div class="scale-item">
+        <span class="scale-num">22</span>
+        <span class="scale-label">Keyword topic families</span>
       </div>
-      <div class="stat-item">
-        <span class="stat-num" data-count="23">0</span>
-        <span class="stat-label">Topics scored</span>
+      <div class="scale-item">
+        <span class="scale-num">All 50</span>
+        <span class="scale-label">States</span>
       </div>
     </div>
 
-    <div class="hero-actions">
-      <a href="explorer.html" class="btn btn-primary">🗺 Explore by State</a>
-      <a href="paper.html" class="btn btn-secondary">📄 Read the Paper</a>
-      <a href="https://github.com/prashgarg/school_websites" target="_blank" class="btn btn-secondary">⇗ GitHub</a>
+    <div class="home-actions">
+      <a href="atlas.html" class="primary">Open the Atlas</a>
+      <a href="paper.html">Read the paper</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
 </div>
 
-<!-- ── Key Findings ───────────────────────────────────────────── -->
-<div class="container">
-  <div class="section">
-    <div class="section-label">Key Findings</div>
-    <h2>What we find</h2>
-    <p class="section-lead">
-      Six cross-cutting results, each with a concrete number. Click a topic to filter.
-    </p>
-
-    <!-- Filter bar -->
-    <div class="findings-filter" id="findings-filter">
-      <button class="filter-chip active" data-filter="all">All findings</button>
-      <button class="filter-chip" data-filter="enrollment">Enrollment growth</button>
-      <button class="filter-chip" data-filter="closure">Closure risk</button>
-      <button class="filter-chip" data-filter="competition">Competition</button>
-      <button class="filter-chip" data-filter="geography">Geography</button>
-    </div>
-
-    <div class="card-grid" id="finding-cards">
-
-      <!-- 1 Tuition transparency -->
-      <div class="card finding-card" data-tags="enrollment closure">
-        <div class="topic-pill" style="background:color-mix(in srgb,#7c3aed 12%,var(--bg));color:#7c3aed;border:1px solid color-mix(in srgb,#7c3aed 25%,transparent)">
-          💰 Tuition transparency
-        </div>
-        <div class="fc-stat" style="margin-top:.625rem">+4.0 pp / SD</div>
-        <h3>Posting your price predicts growth</h3>
-        <p>A one-standard-deviation increase in tuition-transparency scores is
-        associated with 4.0 percentage points faster annual enrollment growth
-        (p &lt; 0.001) — the largest single-topic effect in the data.
-        Elementary schools drive the result; the effect is three times larger
-        than for secondary schools.</p>
-      </div>
-
-      <!-- 2 College prep -->
-      <div class="card finding-card" data-tags="enrollment">
-        <div class="topic-pill" style="background:color-mix(in srgb,#b45309 12%,var(--bg));color:#b45309;border:1px solid color-mix(in srgb,#b45309 25%,transparent)">
-          🎓 College prep / rigor
-        </div>
-        <div class="fc-stat" style="margin-top:.625rem">+2.8 pp / SD</div>
-        <h3>Academic rigor is the second-strongest growth signal</h3>
-        <p>College-preparatory emphasis adds 2.8 percentage points of annual
-        growth per standard deviation (p &lt; 0.001). The effect holds across
-        binary, tercile, and continuous representations, and survives dropping
-        California or adding state × year interactions.</p>
-      </div>
-
-      <!-- 3 Religious + competition -->
-      <div class="card finding-card" data-tags="competition geography">
-        <div class="topic-pill" style="background:color-mix(in srgb,#be185d 12%,var(--bg));color:#be185d;border:1px solid color-mix(in srgb,#be185d 25%,transparent)">
-          ✝ Religious presence
-        </div>
-        <div class="fc-stat" style="margin-top:.625rem">r = −0.083***</div>
-        <h3>Competition suppresses religious signaling</h3>
-        <p>Each doubling of nearby private-school competitors is associated with
-        a one-third standard-deviation decline in religious emphasis — the
-        strongest competitive-suppression effect among all six topics.
-        Religious schools serve bounded denominational markets; broader competition
-        forces a broader signal.</p>
-      </div>
-
-      <!-- 4 GOP geography -->
-      <div class="card finding-card" data-tags="geography">
-        <div class="topic-pill" style="background:color-mix(in srgb,#be185d 12%,var(--bg));color:#be185d;border:1px solid color-mix(in srgb,#be185d 25%,transparent)">
-          ✝ Religious presence
-        </div>
-        <div class="fc-stat" style="margin-top:.625rem">r = +0.072***</div>
-        <h3>Religious identity tracks Republican geography</h3>
-        <p>County Republican presidential vote share (2020) is the strongest
-        geographic predictor of religious emphasis. STEM (r = −0.074***) and
-        tuition transparency (r = −0.088***) show the opposite gradient.
-        The partisan geography of school identity mirrors broader political sorting.</p>
-      </div>
-
-      <!-- 5 SEDA / family partnership -->
-      <div class="card finding-card" data-tags="geography">
-        <div class="topic-pill" style="background:color-mix(in srgb,#15803d 12%,var(--bg));color:#15803d;border:1px solid color-mix(in srgb,#15803d 25%,transparent)">
-          👨‍👩‍👧 Family partnership
-        </div>
-        <div class="fc-stat" style="margin-top:.625rem">r = +0.056***</div>
-        <h3>Family partnership predicts public-school test scores</h3>
-        <p>Among public schools, family-partnership emphasis on the website is
-        the single strongest predictor of school-level SEDA achievement scores —
-        even after controlling for socioeconomic composition and state.
-        The website signal captures both a cultural orientation and real
-        parent-communication infrastructure.</p>
-      </div>
-
-      <!-- 6 Closure -->
-      <div class="card finding-card" data-tags="closure competition">
-        <div class="topic-pill" style="background:color-mix(in srgb,#b91c1c 12%,var(--bg));color:#b91c1c;border:1px solid color-mix(in srgb,#b91c1c 25%,transparent)">
-          🔬 STEM emphasis
-        </div>
-        <div class="fc-stat" style="margin-top:.625rem">r = +0.080***</div>
-        <h3>STEM rises with competition, tracks achievement</h3>
-        <p>STEM emphasis is the only topic that rises both with local competition
-        and with county test scores. Schools in denser markets signal STEM more —
-        consistent with STEM programs drawing from broad secular markets willing
-        to commute for a specialty program, unlike denominational schools.</p>
-      </div>
-
-    </div><!-- /card-grid -->
-  </div>
-
-  <hr class="divider" />
-
-  <!-- ── Six Topics ────────────────────────────────────────────── -->
-  <div class="section">
-    <div class="section-label">What we measure</div>
-    <h2>Six dimensions of school identity</h2>
-    <p class="section-lead">
-      From a 23-topic ontology, six topics show the clearest patterns
-      and strongest outcome associations. Each is constructed from
-      domain-specific regex patterns applied to crawled website text.
-    </p>
-
-    <div class="topic-card-grid">
-
-      <div class="card" style="border-left:4px solid #be185d">
-        <div style="font-size:1.4rem;margin-bottom:.4rem">✝</div>
-        <div style="font-weight:700;margin-bottom:.25rem;font-size:.95rem">Religious Presence</div>
-        <p style="font-size:.82rem;color:var(--text-muted);margin:0;line-height:1.55">
-          Faith mission, denominational affiliation, scripture, spiritual community.
-          <strong style="color:var(--text)">Retreats under competition; tracks conservative geography.</strong>
-        </p>
-      </div>
-
-      <div class="card" style="border-left:4px solid #1d4ed8">
-        <div style="font-size:1.4rem;margin-bottom:.4rem">🌱</div>
-        <div style="font-weight:700;margin-bottom:.25rem;font-size:.95rem">Character / Values</div>
-        <p style="font-size:.82rem;color:var(--text-muted);margin:0;line-height:1.55">
-          Character formation, leadership, integrity, moral education.
-          <strong style="color:var(--text)">Strongly associated with LinkedIn presence (r = +0.24).</strong>
-        </p>
-      </div>
-
-      <div class="card" style="border-left:4px solid #15803d">
-        <div style="font-size:1.4rem;margin-bottom:.4rem">👨‍👩‍👧</div>
-        <div style="font-weight:700;margin-bottom:.25rem;font-size:.95rem">Family Partnership</div>
-        <p style="font-size:.82rem;color:var(--text-muted);margin:0;line-height:1.55">
-          Parent engagement, family-school partnership, volunteer programs.
-          <strong style="color:var(--text)">Strongest predictor of public-school achievement.</strong>
-        </p>
-      </div>
-
-      <div class="card" style="border-left:4px solid #b45309">
-        <div style="font-size:1.4rem;margin-bottom:.4rem">🎓</div>
-        <div style="font-weight:700;margin-bottom:.25rem;font-size:.95rem">College Prep / Rigor</div>
-        <p style="font-size:.82rem;color:var(--text-muted);margin:0;line-height:1.55">
-          AP/IB courses, college counseling, test prep, placement outcomes.
-          <strong style="color:var(--text)">+2.8 pp annual enrollment growth per SD.</strong>
-        </p>
-      </div>
-
-      <div class="card" style="border-left:4px solid #7c3aed">
-        <div style="font-size:1.4rem;margin-bottom:.4rem">💰</div>
-        <div style="font-weight:700;margin-bottom:.25rem;font-size:.95rem">Tuition Transparency</div>
-        <p style="font-size:.82rem;color:var(--text-muted);margin:0;line-height:1.55">
-          Tuition schedules, financial aid, scholarships, payment plans.
-          <strong style="color:var(--text)">+4.0 pp annual enrollment growth per SD — No. 1 predictor.</strong>
-        </p>
-      </div>
-
-      <div class="card" style="border-left:4px solid #b91c1c">
-        <div style="font-size:1.4rem;margin-bottom:.4rem">🔬</div>
-        <div style="font-weight:700;margin-bottom:.25rem;font-size:.95rem">STEM Emphasis</div>
-        <p style="font-size:.82rem;color:var(--text-muted);margin:0;line-height:1.55">
-          Science, robotics, coding, maker spaces, engineering programs.
-          <strong style="color:var(--text)">Rises with competition and county achievement (r = +0.08).</strong>
-        </p>
-      </div>
-
-    </div>
-  </div>
-
-  <hr class="divider" />
-
-  <!-- ── Who is this for ───────────────────────────────────────── -->
-  <div class="section">
-    <div class="about-grid">
-      <div>
-        <div class="section-label">Who this is for</div>
-        <h2>Built for multiple audiences</h2>
-        <p style="font-size:.9rem;color:var(--text-muted);line-height:1.7;margin-bottom:1.5rem">
-          The data and tools on this site are designed to be useful to researchers,
-          school administrators, policymakers, and families.
-        </p>
-        <ul class="for-whom-list">
-          <li>
-            <span class="icon">🎓</span>
-            <div>
-              <strong>Researchers</strong>
-              <p>School-level topic scores, county aggregates, and replication code.
-              See <a href="data.html">Data</a> for release timeline.</p>
-            </div>
-          </li>
-          <li>
-            <span class="icon">🏫</span>
-            <div>
-              <strong>School administrators</strong>
-              <p>The <a href="explorer.html">Explorer</a> shows where your state
-              sits on each dimension and what the enrollment evidence says.</p>
-            </div>
-          </li>
-          <li>
-            <span class="icon">⚖️</span>
-            <div>
-              <strong>Policymakers</strong>
-              <p>Geographic patterns and partisan gradients in school identity
-              reveal how market structure and politics shape the private sector.</p>
-            </div>
-          </li>
-          <li>
-            <span class="icon">👪</span>
-            <div>
-              <strong>Parents</strong>
-              <p>Tuition transparency is the single biggest predictor of growth:
-              schools that post prices attract more families. Look for it.</p>
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <div class="section-label">About</div>
-        <h2>The project</h2>
-        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.75;margin-bottom:1rem">
-          The School Websites Project builds a near-complete census of U.S. school websites
-          through a multi-stage URL discovery pipeline, crawls them at scale, and scores
-          website text using a structured topic ontology. We then link those scores to
-          administrative enrollment and closure data to ask: does what schools say on their
-          websites predict what happens to them?
-        </p>
-        <p style="font-size:.875rem;color:var(--text-muted);line-height:1.75;margin-bottom:1.5rem">
-          The answer is yes. The website is not just a brochure — it is a strategic signal
-          that encodes real positioning decisions, and families respond to it.
-        </p>
-        <div class="info-box">
-          <p>Working paper in preparation.
-          Data and replication code released on submission.
-          Questions: <a href="mailto:prashantgargib@gmail.com">prashantgargib@gmail.com</a></p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div><!-- /container -->
-
 <footer>
   <div class="footer-inner">
-    <span class="footer-copy">© 2026 School Websites Project. Research use.</span>
+    <span class="footer-copy">School Websites Project. Working paper, 2026.</span>
     <div class="footer-links">
-      <a href="index.html">Home</a>
-      <a href="explorer.html">Explorer</a>
+      <a href="atlas.html">Atlas</a>
       <a href="paper.html">Paper</a>
       <a href="methods.html">Methods</a>
       <a href="data.html">Data</a>
-      <a href="https://github.com/prashgarg/school_websites" target="_blank">GitHub ⇗</a>
+      <a href="https://github.com/prashgarg/school_websites" target="_blank" rel="noopener">GitHub</a>
     </div>
   </div>
 </footer>
 
-<script>
-/* ── Finding card filter ───────────────────────────────────── */
-(function () {
-  var btns   = document.querySelectorAll(".filter-chip");
-  var cards  = document.querySelectorAll(".finding-card");
-
-  btns.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var filter = btn.getAttribute("data-filter");
-      btns.forEach(function (b) { b.classList.remove("active"); });
-      btn.classList.add("active");
-
-      cards.forEach(function (card) {
-        if (filter === "all") {
-          card.removeAttribute("data-hidden");
-        } else {
-          var tags = (card.getAttribute("data-tags") || "").split(" ");
-          card.setAttribute("data-hidden", tags.indexOf(filter) < 0 ? "true" : "false");
-        }
-      });
-    });
-  });
-})();
-</script>
 </body>
 </html>
