@@ -148,43 +148,30 @@
       2022&ndash;23 (public, 251,792 school-years).
     </p>
     <p>
-      <strong>Closure (public, national):</strong> the largest closure
-      panel in the paper. NCES Common Core of Data Membership across
-      seven waves 2016&ndash;17 through 2022&ndash;23: <strong>109,204
-      schools and 9,344 closure events</strong>, with full national
-      coverage. Closure = school appears in CCD in year &nbsp;t&nbsp; but
-      not in &nbsp;t+1, with absence persisting.
+      <strong>Closure, national all-school (Wayback 2018 + 2018&ndash;22 attrition):</strong>
+      the headline closure panel. We extracted 2017&ndash;18 Wayback
+      Machine homepage features for <strong>25,780 schools</strong>
+      (6,076 private + 19,704 public) after a 5-VM Hetzner sweep against
+      archive.org, then defined closure as disappearance from the
+      relevant 2021&ndash;22 roster (PSS for private, CCD Membership for
+      public). National coverage, both sectors, <strong>1,965 closure
+      events</strong>. Headline (pooled): academic-rigor and
+      family-partnership keyword density each predict ~15&ndash;19% lower
+      closure odds (both p&nbsp;&lt;&nbsp;0.001).
     </p>
     <p>
-      <strong>Closure (private, six states):</strong> ground-truth state
+      <strong>Closure, public CCD panel (seven-wave):</strong> NCES CCD
+      Membership across seven waves 2016&ndash;17 through 2022&ndash;23:
+      109,204 schools, 9,344 closure events. National coverage.
+    </p>
+    <p>
+      <strong>Closure, six-state ground truth (private):</strong> state
       Department of Education enrollment rosters for California, New
       York, Pennsylvania, Illinois, Ohio, and Wisconsin (1,553 matched
       schools; 70 closure events). Uses 2026 website features to predict
-      closure observed in 2023&ndash;24 / 2024&ndash;25 rosters.
-    </p>
-    <p>
-      <strong>Closure (private, national Wayback panel):</strong>
-      complementary design using earlier features. We extracted
-      2017&ndash;18 Wayback Machine homepage features for
-      <strong>6,076 private schools</strong> in PSS 2017&ndash;18 (after
-      a 5-VM Hetzner sweep against archive.org), then defined closure as
-      disappearance from PSS 2021&ndash;22. National coverage (50
-      states), <strong>425 closure events</strong>. Headline result:
-      tuition-transparency keyword density on the 2018 website is
-      associated with 25% lower closure odds by 2022 (OR&nbsp;=&nbsp;0.75,
-      p&nbsp;=&nbsp;0.004) &mdash; the cleanest national-scale evidence
-      in the paper that disclosure protects survival.
-    </p>
-    <p style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">
-      Why two private-side designs? A closed school has no website to
-      crawl, so to observe website features and closure jointly we need
-      either (a) a post-crawl enrollment-status source (the six states
-      above) or (b) pre-crawl features for an earlier closure window
-      (the Wayback 2018 + PSS 2022 design). The CCD provides this
-      annually for the public sector, which is why the public panel
-      reaches 9,344 events nationally. PSS 2023&ndash;24, when released
-      by NCES, will allow a third design using 2026 features at national
-      scale.
+      closure observed in 2023&ndash;24 / 2024&ndash;25 rosters &mdash;
+      the only post-crawl enrollment-status sources available at the
+      state level.
     </p>
 
     <div class="full-methods-note">
